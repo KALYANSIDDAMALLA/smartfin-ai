@@ -14,6 +14,8 @@ const POINTS = [
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:h-dvh lg:grid-cols-[1fr_1.1fr]">
+      {/* Same full-page picture as the home page (light and dark versions); the indigo panel on the left covers its left half. */}
+      <div aria-hidden className="home-art" />
       <aside className="relative hidden overflow-hidden bg-[linear-gradient(135deg,#1e1b4b,#3730a3_55%,#4f46e5)] text-white lg:flex lg:flex-col lg:justify-between lg:p-10">
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10" />
         <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-black/10" />
@@ -33,10 +35,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mx-auto my-auto w-full max-w-lg">
           <AuthNav />
           <Link href="/" aria-label="SmartFin AI home" className="mb-3 flex justify-center text-brand lg:hidden"><Logo /></Link>
-          <div className="glass rounded-2xl p-4 sm:p-5"><AuthTabs />{children}</div>
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted"><Lock size={12} aria-hidden />Your data is private to you and protected by row-level security.</p>
-          <p className="mt-4 text-center text-xs text-muted [@media(max-height:700px)]:hidden">SmartFin AI tracks and analyses your finances. It is not a bank, wallet or payment service and never moves money.</p>
-          <p className="mt-2 text-center text-xs text-muted [@media(max-height:700px)]:hidden"><Link href="/privacy" className="underline">Privacy</Link> · <Link href="/terms" className="underline">Terms</Link> · <Link href="/contact" className="underline">Contact</Link></p>
+          {/* Solid white card (not see-through glass), so the background picture never tints the form. */}
+          <div className="rounded-2xl border border-line bg-surface p-4 shadow-xl shadow-indigo-900/10 sm:p-5"><AuthTabs />{children}</div>
+          {/* The small print sits on a frosted panel so it stays readable over the background picture. */}
+          <div className="mt-3 rounded-xl border border-line bg-surface px-4 py-3 shadow-md shadow-indigo-900/5">
+            <p className="flex items-center justify-center gap-1.5 text-xs text-muted"><Lock size={12} aria-hidden />Your data is private to you and protected by row-level security.</p>
+            <p className="mt-2 text-center text-xs text-muted [@media(max-height:700px)]:hidden">SmartFin AI tracks and analyses your finances. It is not a bank, wallet or payment service and never moves money.</p>
+            <p className="mt-2 text-center text-xs text-muted [@media(max-height:700px)]:hidden"><Link href="/privacy" className="underline">Privacy</Link> · <Link href="/terms" className="underline">Terms</Link> · <Link href="/contact" className="underline">Contact us</Link></p>
+          </div>
         </div>
       </main>
     </div>
