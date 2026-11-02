@@ -181,7 +181,7 @@ export default async function Home() {
           <nav aria-label="Product"><h2 className="text-sm font-medium">Product</h2><ul className="mt-3 grid gap-2 text-sm text-muted">
             <li><a href="#features" className="hover:text-fg">Features</a></li><li><a href="#how" className="hover:text-fg">How it works</a></li><li><a href="#ai" className="hover:text-fg">AI &amp; privacy</a></li><li><a href="#faq" className="hover:text-fg">FAQ</a></li></ul></nav>
           <nav aria-label="Account and legal"><h2 className="text-sm font-medium">Account &amp; legal</h2><ul className="mt-3 grid gap-2 text-sm text-muted">
-            <li><Link href="/register" className="hover:text-fg">Create account</Link></li><li><Link href="/login" className="hover:text-fg">Log in</Link></li><li><Link href="/privacy" className="hover:text-fg">Privacy policy</Link></li><li><Link href="/terms" className="hover:text-fg">Terms of use</Link></li><li><Link href="/refund" className="hover:text-fg">Refund policy</Link></li><li><Link href="/contact" className="hover:text-fg">Contact</Link></li></ul></nav>
+            <li><Link href="/register" className="hover:text-fg">Create account</Link></li><li><Link href="/login" className="hover:text-fg">Log in</Link></li><li><Link href="/privacy" className="hover:text-fg">Privacy policy</Link></li><li><Link href="/terms" className="hover:text-fg">Terms of use</Link></li><li><Link href="/contact" className="hover:text-fg">Contact</Link></li></ul></nav>
         </div>
         <div className="border-t border-line">
           <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-xs text-muted sm:px-6 md:flex-row md:items-start md:justify-between">

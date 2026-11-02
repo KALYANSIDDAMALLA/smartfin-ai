@@ -10,9 +10,7 @@ import { markRecurringPaid } from "@/app/actions/transactions";
 import { ActionForm } from "@/components/action-form";
 import { Badge, Card, EmptyState, Field, Input, PageHeader, Select } from "@/components/ui";
 import { NumInput } from "@/components/num-input";
-import { LoansSection } from "@/components/loans-section";
-import { demoLiveBlock } from "@/lib/integrations/razorpay";
-import { SummaryLine } from "@/components/summary-line";
+import { LoansSection } from "@/components/loans-section";import { SummaryLine } from "@/components/summary-line";
 
 function Fields({ cats, methods, r }: { cats: { id: string; name: string; kind: string }[]; methods: { id: string; label: string }[]; r?: Record<string, any> }) { // eslint-disable-line @typescript-eslint/no-explicit-any
   return (<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -31,7 +29,7 @@ function Fields({ cats, methods, r }: { cats: { id: string; name: string; kind: 
 const daysAgo = (n: number) => new Date(new Date().getTime() - n * 864e5);
 
 export default async function Repayments() {
-  const { supabase, profile, user } = await requireUser();
+  const { supabase, profile } = await requireUser();
   const [lookups, { data: rules }, loansRes, paysRes, hist] = await Promise.all([loadLookups(supabase), supabase.from("recurring_rules").select("*").order("next_due_date"), supabase.from("loans").select("*").order("created_at"), supabase.from("loan_payments").select("loan_id,installment_no"), loadTxs(supabase, undefined, daysAgo(400), undefined, false)]);
   const detected = detectRecurring(hist.txs, (rules ?? []).map((r) => r.name)).slice(0, 6);
   const methodId = (code?: string | null) => lookups.methods.find((m) => m.code === code)?.id ?? "";
@@ -45,7 +43,7 @@ export default async function Repayments() {
         <section aria-labelledby="loans-h" className="grid gap-4"><h2 id="loans-h" className="text-xl font-semibold">Loans &amp; EMIs</h2>
           {loansRes.error ? <Card className="border-warn/40"><p className="font-medium">Loans are almost ready</p><p className="mt-1 text-sm text-muted">This part of the app needs a one-time setup before you can add loans. Your repeating payments below work as usual in the meantime.</p>
               <details className="mt-2 text-sm"><summary className="cursor-pointer text-brand">App owner? How to finish the setup</summary><p className="mt-2 text-muted">Run <code>supabase/migrations/20261101000008_loans.sql</code> on your database (Supabase dashboard → SQL editor), then reload this page.</p></details></Card>
-            : <LoansSection loans={loansRes.data ?? []} payments={paysRes.data ?? []} currency={profile.currency} today={today} canPay={!demoLiveBlock(user.email)} />}</section>
+            : <LoansSection loans={loansRes.data ?? []} payments={paysRes.data ?? []} currency={profile.currency} today={today} />}</section>
         <section aria-labelledby="bills-h" className="grid gap-6"><h2 id="bills-h" className="text-xl font-semibold">Other repeating payments</h2>
         {detected.length > 0 && <Card><h2 className="mb-1 flex items-center gap-2 font-medium"><Sparkles size={16} className="text-brand" aria-hidden />Detected from your history</h2>
           <p className="mb-3 text-sm text-muted">These payments repeat at a regular interval with a steady amount. Add the ones you want as reminders.</p>

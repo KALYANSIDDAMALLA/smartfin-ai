@@ -1,4 +1,4 @@
-import { IndianRupee, LayoutDashboard, ArrowLeftRight, PlusCircle, Wallet, Smartphone, Banknote, BarChart3, PiggyBank, Sparkles, MessageSquare, Target, Coins, HandCoins, Upload, FileText, Landmark, Send, Settings, CalendarClock, ClipboardList, Database, BrainCircuit, Bell, type LucideIcon } from "lucide-react";
+import { IndianRupee, LayoutDashboard, ArrowLeftRight, PlusCircle, Wallet, Smartphone, Banknote, BarChart3, PiggyBank, Sparkles, MessageSquare, Target, Coins, HandCoins, Upload, FileText, Landmark, Settings, CalendarClock, ClipboardList, Database, BrainCircuit, Bell, type LucideIcon } from "lucide-react";
 
 export interface NavItem { href: string; label: string; icon: LucideIcon; kw?: string }
 export interface NavGroup { group: string; icon: LucideIcon; items: NavItem[] }
@@ -10,7 +10,6 @@ export const NAV: NavGroup[] = [
     { href: "/expenses/new", label: "Add expense", icon: PlusCircle, kw: "new spend record paste sms bank alert draft" },
     { href: "/income", label: "Income", icon: Wallet, kw: "salary earn received add income draft" },
     { href: "/payments/online", label: "Online payments", icon: Smartphone, kw: "upi gpay phonepe paytm card net banking digital" },
-    { href: "/payouts", label: "Send money", icon: Send, kw: "razorpayx payout send pay upi transfer vendor test" },
     { href: "/payments/offline", label: "Offline payments", icon: Banknote, kw: "cash counter physical" },
   ]},
   { group: "Plans", icon: ClipboardList, items: [

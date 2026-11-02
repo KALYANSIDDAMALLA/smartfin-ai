@@ -36,7 +36,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="glass rounded-2xl p-4 sm:p-5"><AuthTabs />{children}</div>
           <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted"><Lock size={12} aria-hidden />Your data is private to you and protected by row-level security.</p>
           <p className="mt-4 text-center text-xs text-muted [@media(max-height:700px)]:hidden">SmartFin AI tracks and analyses your finances. It is not a bank, wallet or payment service and never moves money.</p>
-          <p className="mt-2 text-center text-xs text-muted [@media(max-height:700px)]:hidden"><Link href="/privacy" className="underline">Privacy</Link> · <Link href="/terms" className="underline">Terms</Link> · <Link href="/refund" className="underline">Refunds</Link> · <Link href="/contact" className="underline">Contact</Link></p>
+          <p className="mt-2 text-center text-xs text-muted [@media(max-height:700px)]:hidden"><Link href="/privacy" className="underline">Privacy</Link> · <Link href="/terms" className="underline">Terms</Link> · <Link href="/contact" className="underline">Contact</Link></p>
         </div>
       </main>
     </div>

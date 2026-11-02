@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/auth", "/privacy", "/terms", "/refund", "/contact"];
+const PUBLIC = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/auth", "/privacy", "/terms", "/contact"];
 const isPublic = (p: string) => PUBLIC.some((x) => p === x || (x !== "/" && p.startsWith(x + "/")));
 
 export async function proxy(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
     url.searchParams.set("code", code); const n = request.nextUrl.searchParams.get("next"); if (n) url.searchParams.set("next", n);
     return NextResponse.redirect(url);
   }
-  if (!user && !isPublic(path) && !path.startsWith("/api/health") && !path.startsWith("/api/webhooks/")) { // webhooks have no login; each one verifies its own signature
+  if (!user && !isPublic(path) && !path.startsWith("/api/health")) {
     if (path.startsWith("/api/")) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const url = request.nextUrl.clone(); url.pathname = "/login"; url.searchParams.set("next", path);
     return NextResponse.redirect(url);

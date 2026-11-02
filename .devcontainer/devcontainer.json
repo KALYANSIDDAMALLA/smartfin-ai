@@ -9,11 +9,7 @@
     "SUPABASE_SERVICE_ROLE_KEY": { "description": "Supabase service role key (server only)" },
     "GEMINI_API_KEY": { "description": "Optional: Gemini key for the AI features" },
     "NEXT_PUBLIC_RECAPTCHA_SITE_KEY": { "description": "Optional: reCAPTCHA site key (leave empty to turn the captcha off)" },
-    "RECAPTCHA_SECRET_KEY": { "description": "Optional: reCAPTCHA secret key" },
-    "RAZORPAY_KEY_ID": { "description": "Optional: Razorpay TEST key id (rzp_test_…)" },
-    "RAZORPAY_KEY_SECRET": { "description": "Optional: Razorpay TEST key secret" },
-    "RAZORPAY_WEBHOOK_SECRET": { "description": "Optional: webhook secret you set in the Razorpay dashboard" },
-    "RAZORPAYX_ACCOUNT_NUMBER": { "description": "Optional: RazorpayX test account number" }
+    "RECAPTCHA_SECRET_KEY": { "description": "Optional: reCAPTCHA secret key" }
   },
   "forwardPorts": [3000],
   // Private: only you (signed in to GitHub) can open the forwarded URL.
