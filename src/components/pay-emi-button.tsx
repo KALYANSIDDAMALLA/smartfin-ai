@@ -3,14 +3,8 @@ import { useState, useTransition } from "react";
 import { CreditCard } from "lucide-react";
 import { confirmEmiPayment, createEmiOrder } from "@/app/actions/razorpay";
 import { toast } from "@/lib/feedback-bus";
+import { loadCheckout } from "@/lib/razorpay-client";
 
-type Rzp = new (o: Record<string, unknown>) => { open(): void; on(ev: string, cb: (r: { error?: { description?: string } }) => void): void };
-declare global { interface Window { Razorpay?: Rzp } }
-
-const loadCheckout = () => new Promise<boolean>((res) => {
-  if (window.Razorpay) return res(true);
-  const s = document.createElement("script"); s.src = "https://checkout.razorpay.com/v1/checkout.js"; s.onload = () => res(true); s.onerror = () => res(false); document.head.appendChild(s);
-});
 
 /** "Pay with Razorpay (test)": server makes the order, Checkout takes the payment, the server verifies the signature and then records the EMI. */
 export function PayEmiButton({ loanId }: { loanId: string }) {

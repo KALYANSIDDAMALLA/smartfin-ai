@@ -54,6 +54,17 @@ export const createOrder = (o: { amountMinor: number; receipt: string; notes?: R
 export interface RzpPayout { id: string; status: string; amount: number; mode: string; utr: string | null; reference_id: string | null }
 export const createContact = (o: { name: string; referenceId: string }) => call<{ id: string }>("POST", "/contacts", { name: o.name, type: "vendor", reference_id: o.referenceId });
 export const createUpiFundAccount = (o: { contactId: string; upi: string }) => call<{ id: string }>("POST", "/fund_accounts", { contact_id: o.contactId, account_type: "vpa", vpa: { address: o.upi } });
+export interface RzpValidation { id: string; status: string; results?: { account_status?: string | null; registered_name?: string | null } | null }
+/** "Penny drop": Razorpay sends ₹1 to the UPI id and reports whether it exists and the name registered on it. */
+export const createFundAccountValidation = (o: { fundAccountId: string; referenceId: string }) =>
+  call<RzpValidation>("POST", "/fund_accounts/validations", { account_number: process.env.RAZORPAYX_ACCOUNT_NUMBER, fund_account: { id: o.fundAccountId }, amount: 100, currency: "INR", reference_id: o.referenceId.slice(0, 40), notes: { purpose: "smartfin_account_check" } });
+/** Turns Razorpay's validation answer into our three states. Anything not clearly done stays pending until the webhook says more. */
+export function validationState(v: RzpValidation): "verified" | "failed" | "pending" {
+  if (v.status === "failed") return "failed";
+  if (v.status === "completed") return v.results?.account_status === "active" ? "verified" : "failed";
+  return "pending";
+}
+
 /** The idempotency key makes a retry of the same request safe: Razorpay returns the first payout instead of paying twice. */
 export const createPayout = (o: { fundAccountId: string; amountMinor: number; referenceId: string; narration: string; idempotencyKey: string }) =>
   call<RzpPayout>("POST", "/payouts", {

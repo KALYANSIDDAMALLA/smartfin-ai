@@ -7,6 +7,11 @@ Two test-mode flows, nothing live:
 | **Pay an EMI with Razorpay** | Repayments → each active loan → *Pay with Razorpay (test)* | Server creates an order for the next instalment (amount comes from the database, never the browser) → Razorpay Checkout → server verifies the signature → the EMI is recorded exactly as *Mark EMI paid* does. |
 | **Send a UPI payout with RazorpayX** | *Send money (test)* in the sidebar (`/payouts`) | Server creates a contact and UPI fund account, then a payout with an idempotency key. Status is kept in `razorpayx_payouts` and updated by the webhook. |
 
+| **Verify / Send money / Add money per account** | *Bank account links → Your accounts → each account → Razorpay (test)* | **Verify:** RazorpayX ₹1 "penny drop" to a UPI id; shows the registered name and a *Verified* badge (the UPI id is not stored). **Send money:** a test payout tied to the account, history shown under it. **Add money:** Razorpay Checkout; a verified payment is recorded as income on that account. |
+
+Razorpay does **not** read bank balances or transactions; that stays with the Account Aggregator on the same page.
+Run migrations `…009` and then `…010` (`20261101000010_razorpay_accounts.sql`) first. Verify and Send money need `RAZORPAYX_ACCOUNT_NUMBER`; Add money only needs the Razorpay keys. Add the webhook events `fund_account.validation.completed` and `fund_account.validation.failed` too.
+
 Not built yet: subscriptions / paid plans (needs a pricing decision), recording a payout as a ledger expense, live mode.
 
 ## Setup (about 10 minutes)

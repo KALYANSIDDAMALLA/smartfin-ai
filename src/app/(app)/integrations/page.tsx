@@ -9,6 +9,8 @@ import { disconnectBank, refreshConnection, syncConnection } from "@/app/actions
 import { ActionForm } from "@/components/action-form";
 import { AddAccountForm, BankLinkForm } from "@/components/bank-forms";
 import { CheckBalance } from "@/components/check-balance";
+import { AccountRazorpay, type PayoutRow, type Verification } from "@/components/account-razorpay";
+import { razorpayConfigured, razorpayxConfigured } from "@/lib/integrations/razorpay";
 import { SummaryLine } from "@/components/summary-line";
 import { Badge, Card, PageHeader } from "@/components/ui";
 
@@ -25,11 +27,18 @@ type Meta = { bank?: string; mobileLast4?: string; demo?: boolean; accounts?: { 
 
 export default async function BankLinks() {
   const { supabase, profile } = await requireUser(); const live = setuConfigured(); const m = (v: number) => formatMoney(v, profile.currency);
-  const [{ data: conns }, { data: accounts }, { data: consents }] = await Promise.all([
+  const [{ data: conns }, { data: accounts }, { data: consents }, { data: verifs }, { data: pays }] = await Promise.all([
     supabase.from("integration_connections").select("*").eq("provider", "account_aggregator").neq("status", "revoked").order("created_at", { ascending: false }),
     supabase.from("accounts").select("*").eq("archived", false).order("created_at"),
     supabase.from("integration_consents").select("*").order("created_at", { ascending: false }).limit(20),
+    // Razorpay extras: empty (not an error) until migrations 20261101000009/10 are run, so the page never breaks.
+    supabase.from("account_verifications").select("account_id,status,registered_name,upi_masked,created_at").order("created_at", { ascending: false }).limit(100),
+    supabase.from("razorpayx_payouts").select("id,account_id,payee_name,upi_masked,amount_minor,status,created_at").not("account_id", "is", null).order("created_at", { ascending: false }).limit(100),
   ]);
+  const checkoutReady = razorpayConfigured(); const payoutsReady = razorpayxConfigured();
+  const verifOf = (id: string): Verification | null => { const v = (verifs ?? []).find((x) => x.account_id === id); return v ? { status: v.status as Verification["status"], name: v.registered_name, upi: v.upi_masked } : null; };
+  const payoutsOf = (id: string): PayoutRow[] => (pays ?? []).filter((p) => p.account_id === id).slice(0, 3).map((p) => ({ id: p.id, payee: p.payee_name, upi: p.upi_masked, amountLabel: m(Number(p.amount_minor)), status: p.status,
+    when: new Date(p.created_at).toLocaleString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) }));
   const linked = (conns ?? []).filter((c) => c.status === "connected").length; const nAcc = accounts?.length ?? 0;
   return (
     <>
@@ -62,10 +71,11 @@ export default async function BankLinks() {
           <h2 className="mb-1 font-medium">Your accounts</h2>
           <p className="mb-4 text-sm text-muted">Add the accounts you use, even without linking, so you can pick them when you record a transfer between your own accounts.</p>
           {!!nAcc && <ul className="mb-5 grid gap-2 sm:grid-cols-2">{accounts!.map((a) => (
-            <li key={a.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface/60 px-3 py-2.5"><div className="flex min-w-0 items-center gap-3">
+            <li key={a.id} className="rounded-xl border border-line bg-surface/60 px-3 py-2.5"><div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white" style={{ background: `hsl(${bankHue(a.name)} 60% 45%)` }}><Landmark size={16} aria-hidden /></span>
               <div className="min-w-0"><p className="truncate text-sm font-medium">{a.name}</p><p className="text-xs text-muted">{a.kind === "bank" ? "Bank account" : a.kind === "credit_card" ? ACCOUNT_TYPES.credit_card : a.kind === "wallet" ? ACCOUNT_TYPES.wallet : a.kind === "cash" ? ACCOUNT_TYPES.cash : "Other"}{Number(a.opening_balance_minor) ? ` · opening ${m(Number(a.opening_balance_minor))}` : ""}</p></div></div>
-              <ActionForm action={archiveAccount} compact submit="Remove" variant="ghost" confirm={`Remove “${a.name}” from your list? Past transfers stay.`}><input type="hidden" name="id" value={a.id} /></ActionForm></li>))}</ul>}
+              <ActionForm action={archiveAccount} compact submit="Remove" variant="ghost" confirm={`Remove “${a.name}” from your list? Past transfers stay.`}><input type="hidden" name="id" value={a.id} /></ActionForm></div>
+              <AccountRazorpay accountId={a.id} verification={verifOf(a.id)} payouts={payoutsOf(a.id)} checkoutReady={checkoutReady} payoutsReady={payoutsReady} /></li>))}</ul>}
           <h3 className="mb-2 text-sm font-semibold">Add an account</h3><AddAccountForm />
         </Card>
 
