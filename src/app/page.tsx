@@ -65,16 +65,16 @@ export default async function Home() {
       {/* Rupee coins: placed from the middle of the empty gap beside the content (see .home-coins in globals.css); only shown when the gap is wide enough for them. */}
       <div aria-hidden className="home-coins"><i className="coin coin-l1" /><i className="coin coin-l2" /><i className="coin coin-r1" /><i className="coin coin-r2" /></div>
       <header className="glass sticky top-3 z-20 mx-3 mt-3 rounded-2xl sm:mx-auto sm:max-w-6xl">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" aria-label="SmartFin AI home" className="text-brand"><Logo /></Link>
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:px-6">
+          <Link href="/" aria-label="SmartFin AI home" className="shrink-0 whitespace-nowrap text-brand"><Logo textClassName="text-base sm:text-lg max-[359px]:hidden" /></Link>
           <nav aria-label="Primary" className="hidden items-center gap-3 text-sm text-muted md:flex lg:gap-6"><a href="#showcase" className="hover:text-fg">See it</a><a href="#features" className="hover:text-fg">Features</a><a href="#how" className="hover:text-fg">How it works</a><a href="#ai" className="hover:text-fg">AI</a><a href="#faq" className="hover:text-fg">FAQ</a><Link href="/contact" className="whitespace-nowrap hover:text-fg">Contact us</Link></nav>
-          <div className="flex items-center gap-2 text-sm"><span className="mr-2 sm:mr-5"><ThemeToggle /></span><Link href="/login" className="btn-shine rounded-xl border border-brand/45 bg-brand/10 px-4 py-2 font-semibold text-brand shadow-sm transition hover:border-brand hover:bg-brand/20">Log in</Link><Link href="/register" className="btn-shine glow rounded-xl bg-linear-to-b from-brand to-brand/85 px-4 py-2 font-semibold text-brandfg shadow-lg shadow-brand/40 ring-1 ring-white/30 transition hover:brightness-110">Sign up</Link></div>
+          <div className="flex items-center gap-1.5 text-sm sm:gap-2"><span className="mr-0 sm:mr-5"><ThemeToggle /></span><Link href="/login" className="btn-shine whitespace-nowrap rounded-xl border border-brand/45 bg-brand/10 px-3 py-2 font-semibold sm:px-4 text-brand shadow-sm transition hover:border-brand hover:bg-brand/20">Log in</Link><Link href="/register" className="btn-shine glow whitespace-nowrap rounded-xl bg-linear-to-b from-brand to-brand/85 px-3 py-2 font-semibold sm:px-4 text-brandfg shadow-lg shadow-brand/40 ring-1 ring-white/30 transition hover:brightness-110">Sign up</Link></div>
         </div>
       </header>
 
       <main>
         <section aria-labelledby="hero-h" className="mx-3 mt-4 sm:mx-auto sm:max-w-6xl">
-          <div className="relative isolate overflow-hidden rounded-3xl border border-white/25 bg-[linear-gradient(135deg,rgba(23,20,64,.88),rgba(46,40,150,.78)_55%,rgba(67,56,202,.7))] px-5 py-10 text-white shadow-2xl shadow-[inset_0_1px_0_rgba(255,255,255,.3)] backdrop-blur-xl backdrop-saturate-150 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
+          <div className="relative isolate overflow-hidden rounded-3xl border border-white/25 bg-[linear-gradient(135deg,rgba(22,19,60,.95),rgba(38,33,128,.9)_55%,rgba(52,45,170,.85))] px-5 py-10 text-white shadow-2xl shadow-[inset_0_1px_0_rgba(255,255,255,.3)] backdrop-blur-xl backdrop-saturate-150 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
             <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 -z-10 h-96 w-96 rounded-full bg-white/10" />
             <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-20 -z-10 h-[26rem] w-[26rem] rounded-full bg-black/15" />
             <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
