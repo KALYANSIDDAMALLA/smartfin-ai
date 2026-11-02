@@ -4,7 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { Logo } from "@/components/logo";
 import { DashboardShowcase } from "@/components/dashboard-showcase";
 import { HomeHighlights } from "@/components/home-highlights";
-import { ArrowRight, ArrowUp, BarChart3, Check, FileUp, GraduationCap, Home as HomeIcon, LineChart, Lock, Minus, PiggyBank, Repeat, ShieldCheck, Target, Users, Wallet } from "lucide-react";
+import { ArrowRight, ArrowUp, BarChart3, Check, FileUp, GraduationCap, Home as HomeIcon, LineChart, Lock, Mail, Minus, Phone, PiggyBank, Repeat, ShieldCheck, Target, Users, Wallet } from "lucide-react";
+
+/** Founder details shown in the footer; they come from settings (NEXT_PUBLIC_*), not from the code. Anything left empty is simply not shown. */
+const clean = (v: string | undefined) => (v ?? "").trim();
+const FOUNDER = { name: clean(process.env.NEXT_PUBLIC_BUSINESS_NAME), role: clean(process.env.NEXT_PUBLIC_CONTACT_ROLE), email: clean(process.env.NEXT_PUBLIC_CONTACT_EMAIL), phone: clean(process.env.NEXT_PUBLIC_CONTACT_PHONE) };
 
 
 const FEATURES = [
@@ -179,7 +183,14 @@ export default async function Home() {
       <footer className="border-t border-line/60 bg-surface/50 backdrop-blur">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-4">
           <div className="md:col-span-2"><p className="text-brand"><Logo /></p>
-            <p className="mt-3 max-w-sm text-sm text-muted">Personal finance tracking, budgets, goals and AI-assisted insights for people in India.</p></div>
+            <p className="mt-3 max-w-sm text-sm text-muted">Personal finance tracking, budgets, goals and AI-assisted insights for people in India.</p>
+            {(FOUNDER.name || FOUNDER.email || FOUNDER.phone) && <div className="mt-5 max-w-sm border-t border-line/60 pt-4 text-sm">
+              {FOUNDER.name && <p className="font-semibold text-fg">{FOUNDER.name}</p>}
+              {FOUNDER.role && <p className="text-muted">{FOUNDER.role}</p>}
+              <ul className="mt-2.5 grid gap-1 text-muted">
+                {FOUNDER.email && <li><a href={`mailto:${FOUNDER.email}`} className="inline-flex min-h-8 items-center gap-2 break-all transition hover:text-brand"><Mail size={15} className="shrink-0 text-brand" aria-hidden />{FOUNDER.email}</a></li>}
+                {FOUNDER.phone && <li><a href={`tel:${FOUNDER.phone.replace(/[^+\d]/g, "")}`} className="inline-flex min-h-8 items-center gap-2 transition hover:text-brand"><Phone size={15} className="shrink-0 text-brand" aria-hidden />{FOUNDER.phone}</a></li>}
+              </ul></div>}</div>
           <nav aria-label="Product"><h2 className="text-sm font-medium">Product</h2><ul className="mt-3 grid gap-2 text-sm text-muted">
             <li><a href="#features" className="hover:text-fg">Features</a></li><li><a href="#how" className="hover:text-fg">How it works</a></li><li><a href="#ai" className="hover:text-fg">AI &amp; privacy</a></li><li><a href="#faq" className="hover:text-fg">FAQ</a></li></ul></nav>
           <nav aria-label="Account and legal"><h2 className="text-sm font-medium">Account &amp; legal</h2><ul className="mt-3 grid gap-2 text-sm text-muted">
