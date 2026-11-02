@@ -1,13 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice" role="img" aria-label="">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9e0ff"/><stop offset=".55" stop-color="#efe6ff"/><stop offset=".85" stop-color="#ffe6d2"/><stop offset="1" stop-color="#ffd9bd"/></linearGradient>
-    <radialGradient id="sun" cx="76%" cy="64%" r="42%"><stop offset="0" stop-color="#fbbf24" stop-opacity=".62"/><stop offset=".4" stop-color="#fb923c" stop-opacity=".22"/><stop offset="1" stop-color="#fb923c" stop-opacity="0"/></radialGradient>
+    <radialGradient id="sun" cx="94%" cy="17%" r="36%"><stop offset="0" stop-color="#fbbf24" stop-opacity=".62"/><stop offset=".4" stop-color="#fb923c" stop-opacity=".22"/><stop offset="1" stop-color="#fb923c" stop-opacity="0"/></radialGradient>
     <radialGradient id="vio" cx="8%" cy="6%" r="48%"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".30"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></radialGradient>
     <linearGradient id="gl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6366f1"/><stop offset=".55" stop-color="#10b981"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>
     <filter id="b"><feGaussianBlur stdDeviation="9"/></filter><path id="sp" d="M0-14C1.5-5 5-1.5 14 0 5 1.5 1.5 5 0 14-1.5 5-5 1.5-14 0-5-1.5-1.5-5 0-14Z"/>
   </defs>
   <rect width="1600" height="1000" fill="url(#sky)"/><rect width="1600" height="1000" fill="url(#vio)"/><rect width="1600" height="1000" fill="url(#sun)"/>
-  <circle cx="1215" cy="640" r="92" fill="#fbbf24" opacity=".8"/><circle cx="1215" cy="640" r="150" fill="none" stroke="#fbbf24" stroke-opacity=".28" stroke-width="2"/><circle cx="1215" cy="640" r="215" fill="none" stroke="#fbbf24" stroke-opacity=".16" stroke-width="2"/>
+  <defs><radialGradient id="sglow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fbbf24" stop-opacity=".55"/><stop offset=".45" stop-color="#fb923c" stop-opacity=".2"/><stop offset="1" stop-color="#fb923c" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="1500" cy="170" r="190" fill="url(#sglow)"/>
+  <g stroke="#f59e0b" stroke-width="5" stroke-linecap="round" opacity=".6"><line x1="1570.0" y1="170.0" x2="1598.0" y2="170.0"/><line x1="1560.6" y1="205.0" x2="1576.2" y2="214.0"/><line x1="1535.0" y1="230.6" x2="1549.0" y2="254.9"/><line x1="1500.0" y1="240.0" x2="1500.0" y2="258.0"/><line x1="1465.0" y1="230.6" x2="1451.0" y2="254.9"/><line x1="1439.4" y1="205.0" x2="1423.8" y2="214.0"/><line x1="1430.0" y1="170.0" x2="1402.0" y2="170.0"/><line x1="1439.4" y1="135.0" x2="1423.8" y2="126.0"/><line x1="1465.0" y1="109.4" x2="1451.0" y2="85.1"/><line x1="1500.0" y1="100.0" x2="1500.0" y2="82.0"/><line x1="1535.0" y1="109.4" x2="1549.0" y2="85.1"/><line x1="1560.6" y1="135.0" x2="1576.2" y2="126.0"/></g>
+  <circle cx="1500" cy="170" r="54" fill="#fbbf24"/><circle cx="1500" cy="170" r="54" fill="none" stroke="#f59e0b" stroke-opacity=".5" stroke-width="2"/>
   <g fill="#fff" opacity=".6" filter="url(#b)"><ellipse cx="330" cy="300" rx="190" ry="34"/><ellipse cx="470" cy="330" rx="140" ry="26"/><ellipse cx="1000" cy="180" rx="210" ry="30"/><ellipse cx="1380" cy="470" rx="170" ry="28"/></g>
   
   <g fill="#6366f1"><use href="#sp" x="90" y="470" opacity=".4"/><use href="#sp" x="800" y="250" opacity=".4" transform="translate(800 250) scale(.8) translate(-800 -250)"/></g>
