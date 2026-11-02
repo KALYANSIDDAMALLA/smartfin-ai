@@ -144,8 +144,8 @@ export function AppShell({ children, name, unread, avatarUrl, searchCtx, timezon
                 </div>
                 <Link role="menuitem" href="/settings" onClick={() => setMenu(false)} className="block rounded-lg px-3 py-2 text-sm transition hover:bg-brand/10 hover:text-brand">Profile & settings</Link>
                 <form action="/auth/signout" method="post" onSubmit={(e) => { e.preventDefault(); // ask first. Clicking the pop-up closes this menu (and removes this form), so a fresh form is submitted on "yes"
-                  void askConfirm({ title: "Log out?", message: "Are you sure you want to log out?", confirmLabel: "Yes, log out", cancelLabel: "Stay logged in", tone: "primary" }).then((ok) => {
-                    if (!ok) return; const f = document.createElement("form"); f.method = "post"; f.action = "/auth/signout"; document.body.appendChild(f); f.submit(); }); }}><button role="menuitem" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-bad/10 hover:text-bad"><LogOut size={14} /> Log out</button></form>
+                  void askConfirm({ title: "Log out?", message: "Are you sure you want to log out?", confirmLabel: "Yes, log out", cancelLabel: "Stay logged in", tone: "danger" }).then((ok) => {
+                    if (!ok) return; const f = document.createElement("form"); f.method = "post"; f.action = "/auth/signout"; document.body.appendChild(f); f.submit(); }); }}><button role="menuitem" className="mt-1 flex min-h-[38px] w-full items-center gap-2.5 rounded-xl border border-bad/50 bg-bad/10 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-bad shadow-sm transition hover:bg-bad hover:text-white"><LogOut size={15} aria-hidden /> Log out</button></form>
               </div>}
             </div>
           </div>
