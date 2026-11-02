@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Logo } from "@/components/logo";
 import { DashboardShowcase } from "@/components/dashboard-showcase";
 import { HomeHighlights } from "@/components/home-highlights";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ArrowRight, ArrowUp, BarChart3, Check, FileUp, GraduationCap, Home as HomeIcon, LineChart, Lock, Mail, Minus, Phone, PiggyBank, Repeat, ShieldCheck, Target, Users, Wallet } from "lucide-react";
 
 /** Founder details shown in the footer; they come from settings (NEXT_PUBLIC_*), not from the code. Anything left empty is simply not shown. */
@@ -67,7 +68,7 @@ export default async function Home() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" aria-label="SmartFin AI home" className="text-brand"><Logo /></Link>
           <nav aria-label="Primary" className="hidden items-center gap-3 text-sm text-muted md:flex lg:gap-6"><a href="#showcase" className="hover:text-fg">See it</a><a href="#features" className="hover:text-fg">Features</a><a href="#how" className="hover:text-fg">How it works</a><a href="#ai" className="hover:text-fg">AI</a><a href="#faq" className="hover:text-fg">FAQ</a><Link href="/contact" className="whitespace-nowrap hover:text-fg">Contact us</Link></nav>
-          <div className="flex items-center gap-2 text-sm"><Link href="/login" className="rounded-xl px-4 py-2 font-medium transition hover:bg-brand/10 hover:text-brand">Log in</Link><Link href="/register" className="btn-shine glow rounded-xl bg-linear-to-b from-brand to-brand/85 px-4 py-2 font-medium text-brandfg transition">Sign up</Link></div>
+          <div className="flex items-center gap-2 text-sm"><ThemeToggle /><Link href="/login" className="rounded-xl px-4 py-2 font-medium transition hover:bg-brand/10 hover:text-brand">Log in</Link><Link href="/register" className="btn-shine glow rounded-xl bg-linear-to-b from-brand to-brand/85 px-4 py-2 font-medium text-brandfg transition">Sign up</Link></div>
         </div>
       </header>
 
