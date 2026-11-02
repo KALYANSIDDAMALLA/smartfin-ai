@@ -64,7 +64,7 @@ export default async function Home() {
       <header className="glass sticky top-3 z-20 mx-3 mt-3 rounded-2xl sm:mx-auto sm:max-w-6xl">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" aria-label="SmartFin AI home" className="text-brand"><Logo /></Link>
-          <nav aria-label="Primary" className="hidden items-center gap-6 text-sm text-muted md:flex"><a href="#showcase" className="hover:text-fg">See it</a><a href="#features" className="hover:text-fg">Features</a><a href="#how" className="hover:text-fg">How it works</a><a href="#ai" className="hover:text-fg">AI</a><a href="#faq" className="hover:text-fg">FAQ</a></nav>
+          <nav aria-label="Primary" className="hidden items-center gap-3 text-sm text-muted md:flex lg:gap-6"><a href="#showcase" className="hover:text-fg">See it</a><a href="#features" className="hover:text-fg">Features</a><a href="#how" className="hover:text-fg">How it works</a><a href="#ai" className="hover:text-fg">AI</a><a href="#faq" className="hover:text-fg">FAQ</a><Link href="/contact" className="whitespace-nowrap hover:text-fg">Contact us</Link></nav>
           <div className="flex items-center gap-2 text-sm"><Link href="/login" className="rounded-xl px-4 py-2 font-medium transition hover:bg-brand/10 hover:text-brand">Log in</Link><Link href="/register" className="btn-shine glow rounded-xl bg-linear-to-b from-brand to-brand/85 px-4 py-2 font-medium text-brandfg transition">Sign up</Link></div>
         </div>
       </header>
@@ -194,7 +194,7 @@ export default async function Home() {
           <nav aria-label="Product"><h2 className="text-sm font-medium">Product</h2><ul className="mt-3 grid gap-2 text-sm text-muted">
             <li><a href="#features" className="hover:text-fg">Features</a></li><li><a href="#how" className="hover:text-fg">How it works</a></li><li><a href="#ai" className="hover:text-fg">AI &amp; privacy</a></li><li><a href="#faq" className="hover:text-fg">FAQ</a></li></ul></nav>
           <nav aria-label="Account and legal"><h2 className="text-sm font-medium">Account &amp; legal</h2><ul className="mt-3 grid gap-2 text-sm text-muted">
-            <li><Link href="/register" className="hover:text-fg">Create account</Link></li><li><Link href="/login" className="hover:text-fg">Log in</Link></li><li><Link href="/privacy" className="hover:text-fg">Privacy policy</Link></li><li><Link href="/terms" className="hover:text-fg">Terms of use</Link></li><li><Link href="/contact" className="hover:text-fg">Contact</Link></li></ul></nav>
+            <li><Link href="/register" className="hover:text-fg">Create account</Link></li><li><Link href="/login" className="hover:text-fg">Log in</Link></li><li><Link href="/privacy" className="hover:text-fg">Privacy policy</Link></li><li><Link href="/terms" className="hover:text-fg">Terms of use</Link></li><li><Link href="/contact" className="hover:text-fg">Contact us</Link></li></ul></nav>
         </div>
         <div className="border-t border-line">
           <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-xs text-muted sm:px-6 md:flex-row md:items-start md:justify-between">
