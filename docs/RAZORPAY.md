@@ -14,6 +14,17 @@ Run migrations `…009` and then `…010` (`20261101000010_razorpay_accounts.sql
 
 Not built yet: subscriptions / paid plans (needs a pricing decision), recording a payout as a ledger expense, live mode.
 
+## Going live (real money)
+
+The app is in **test mode** unless **all three** hold, so localhost and preview deploys can never take real money:
+1. `RAZORPAY_MODE=live`
+2. `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` are `rzp_live_…` keys (a test key in live mode, or a live key in test mode, switches Razorpay **off**)
+3. It is the real Vercel **production** deployment (`VERCEL_ENV=production`). On your own machine you would also need `RAZORPAY_ALLOW_LIVE_LOCAL=1`; don't.
+
+Steps (yours): finish Razorpay **KYC / Activate account**; get the website approved (needs `/terms`, `/privacy`, `/refund`, `/contact` with **real** details: set `NEXT_PUBLIC_BUSINESS_NAME`, `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_CONTACT_PHONE`, `NEXT_PUBLIC_BUSINESS_ADDRESS`); activate RazorpayX and fund it for payouts; generate **Live** keys; add a **Live** webhook to `https://<site>/api/webhooks/razorpay` with its own secret. Put the live keys **directly into Vercel's Environment Variables** (Production only), never in chat or in `.env.local`, then redeploy.
+
+Before real users: review the legal pages with a lawyer (they are drafts), and read *Known limitations* below.
+
 ## Setup (about 10 minutes)
 
 1. **Run the migration** `supabase/migrations/20261101000009_razorpay.sql` (adds `razorpay_orders` and `razorpayx_payouts`, both with RLS).

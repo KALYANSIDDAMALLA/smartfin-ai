@@ -10,7 +10,7 @@ import { ActionForm } from "@/components/action-form";
 import { AddAccountForm, BankLinkForm } from "@/components/bank-forms";
 import { CheckBalance } from "@/components/check-balance";
 import { AccountRazorpay, type PayoutRow, type Verification } from "@/components/account-razorpay";
-import { razorpayConfigured, razorpayxConfigured } from "@/lib/integrations/razorpay";
+import { razorpayConfigured, razorpayIsLive, razorpayxConfigured } from "@/lib/integrations/razorpay";
 import { SummaryLine } from "@/components/summary-line";
 import { Badge, Card, PageHeader } from "@/components/ui";
 
@@ -75,7 +75,7 @@ export default async function BankLinks() {
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white" style={{ background: `hsl(${bankHue(a.name)} 60% 45%)` }}><Landmark size={16} aria-hidden /></span>
               <div className="min-w-0"><p className="truncate text-sm font-medium">{a.name}</p><p className="text-xs text-muted">{a.kind === "bank" ? "Bank account" : a.kind === "credit_card" ? ACCOUNT_TYPES.credit_card : a.kind === "wallet" ? ACCOUNT_TYPES.wallet : a.kind === "cash" ? ACCOUNT_TYPES.cash : "Other"}{Number(a.opening_balance_minor) ? ` · opening ${m(Number(a.opening_balance_minor))}` : ""}</p></div></div>
               <ActionForm action={archiveAccount} compact submit="Remove" variant="ghost" confirm={`Remove “${a.name}” from your list? Past transfers stay.`}><input type="hidden" name="id" value={a.id} /></ActionForm></div>
-              <AccountRazorpay accountId={a.id} verification={verifOf(a.id)} payouts={payoutsOf(a.id)} checkoutReady={checkoutReady} payoutsReady={payoutsReady} /></li>))}</ul>}
+              <AccountRazorpay accountId={a.id} verification={verifOf(a.id)} payouts={payoutsOf(a.id)} checkoutReady={checkoutReady} payoutsReady={payoutsReady} live={razorpayIsLive()} /></li>))}</ul>}
           <h3 className="mb-2 text-sm font-semibold">Add an account</h3><AddAccountForm />
         </Card>
 

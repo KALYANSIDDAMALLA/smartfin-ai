@@ -7,7 +7,7 @@ import { loadCheckout } from "@/lib/razorpay-client";
 
 
 /** "Pay with Razorpay (test)": server makes the order, Checkout takes the payment, the server verifies the signature and then records the EMI. */
-export function PayEmiButton({ loanId }: { loanId: string }) {
+export function PayEmiButton({ loanId, live = false }: { loanId: string; live?: boolean }) {
   const [pending, start] = useTransition(); const [busy, setBusy] = useState(false);
   const pay = () => start(async () => {
     const o = await createEmiOrder(loanId); if ("error" in o) { toast(o.error, "error", 5000); return; }
@@ -24,6 +24,6 @@ export function PayEmiButton({ loanId }: { loanId: string }) {
   });
   return (
     <button type="button" onClick={pay} disabled={pending || busy} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-medium transition hover:border-brand/50 hover:bg-brand/10 disabled:opacity-60">
-      <CreditCard size={15} aria-hidden />{pending || busy ? "Working…" : "Pay with Razorpay (test)"}</button>
+      <CreditCard size={15} aria-hidden />{pending || busy ? "Working…" : live ? "Pay with Razorpay" : "Pay with Razorpay (test)"}</button>
   );
 }

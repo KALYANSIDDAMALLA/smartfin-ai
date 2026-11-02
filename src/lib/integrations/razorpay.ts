@@ -2,17 +2,29 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 /**
- * Razorpay (Checkout / Orders) and RazorpayX (Payouts), TEST MODE ONLY for now.
- * Plain REST with Basic auth, so no SDK dependency. RazorpayX uses the same API keys as Razorpay, plus your RazorpayX account number.
- * Live keys (rzp_live_…) are refused on purpose until this has been reviewed for production.
+ * Razorpay (Checkout / Orders) and RazorpayX (Payouts). Plain REST with Basic auth, so no SDK dependency.
+ * RazorpayX uses the same API keys as Razorpay, plus your RazorpayX account number.
+ *
+ * MODE SWITCH (safe by default): the app is in TEST mode unless BOTH hold:
+ *   1. RAZORPAY_MODE=live, and
+ *   2. this is the real Vercel production deployment (VERCEL_ENV=production), or RAZORPAY_ALLOW_LIVE_LOCAL=1 is set on purpose.
+ * So localhost, previews and any forgotten setting can never take real money. The keys must match the mode
+ * (rzp_test_… in test, rzp_live_… in live); a mismatch switches Razorpay OFF instead of guessing.
  */
 const BASE = "https://api.razorpay.com/v1";
 
+export const razorpayMode = (): "live" | "test" =>
+  process.env.RAZORPAY_MODE === "live" && (process.env.VERCEL_ENV === "production" || process.env.RAZORPAY_ALLOW_LIVE_LOCAL === "1") ? "live" : "test";
+export const razorpayIsLive = () => razorpayMode() === "live";
+const keyPrefix = () => (razorpayIsLive() ? "rzp_live_" : "rzp_test_");
+/** " (test)" in test mode, "" in live mode: appended to button and message text so real payments never say "test". */
+export const testTag = () => (razorpayIsLive() ? "" : " (test)");
+
 export const razorpayKeys = () => ({ keyId: process.env.RAZORPAY_KEY_ID ?? "", keySecret: process.env.RAZORPAY_KEY_SECRET ?? "" });
-export const razorpayConfigured = () => { const k = razorpayKeys(); return k.keyId.startsWith("rzp_test_") && !!k.keySecret; };
+export const razorpayConfigured = () => { const k = razorpayKeys(); return k.keyId.startsWith(keyPrefix()) && !!k.keySecret; };
 export const razorpayxConfigured = () => razorpayConfigured() && !!process.env.RAZORPAYX_ACCOUNT_NUMBER;
-/** True when a key is set but is not a test key, so the UI can say why nothing works. */
-export const razorpayLiveKeyBlocked = () => { const id = razorpayKeys().keyId; return !!id && !id.startsWith("rzp_test_"); };
+/** True when a key is set but doesn't match the current mode (e.g. a live key in test mode), so the UI can say why nothing works. */
+export const razorpayKeyMismatch = () => { const id = razorpayKeys().keyId; return !!id && !id.startsWith(keyPrefix()); };
 
 export class RazorpayError extends Error {
   constructor(public status: number, public code: string, message: string) { super(message); }

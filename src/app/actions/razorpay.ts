@@ -7,7 +7,7 @@ import { rateLimit } from "@/lib/server/ratelimit";
 import { moneyField, nameField } from "@/lib/server/validation";
 import { schedule } from "@/lib/finance/loans";
 import { formatMoney } from "@/lib/finance/money";
-import { createContact, createFundAccountValidation, createOrder, createPayout, createUpiFundAccount, razorpayConfigured, razorpayKeys, razorpayxConfigured, RazorpayError, validationState, verifyCheckoutSignature } from "@/lib/integrations/razorpay";
+import { createContact, createFundAccountValidation, createOrder, createPayout, createUpiFundAccount, razorpayConfigured, razorpayIsLive, razorpayKeys, razorpayxConfigured, RazorpayError, testTag, validationState, verifyCheckoutSignature } from "@/lib/integrations/razorpay";
 import { UPI_RE, maskUpi } from "@/lib/upi";
 import { markEmiPaid } from "./loans";
 import type { FormState } from "./auth";
@@ -53,7 +53,7 @@ export async function confirmEmiPayment(orderId: string, paymentId: string, sign
   const claim = await a.supabase.from("razorpay_orders").update({ status: "paid", payment_id: String(paymentId) }).eq("order_id", String(orderId)).eq("status", "created").select("id");
   if (claim.error || !claim.data?.length) return { ok: "This payment was already recorded." };
   const fd = new FormData(); fd.set("id", ord.loan_id); await markEmiPaid(fd);
-  revalidatePath("/repayments"); return { ok: `Paid ${formatMoney(Number(ord.amount_minor))} with Razorpay (test) and recorded the EMI.` };
+  revalidatePath("/repayments"); return { ok: `Paid ${formatMoney(Number(ord.amount_minor))} with Razorpay${testTag()} and recorded the EMI.` };
 }
 
 const payoutSchema = z.object({
@@ -68,7 +68,7 @@ export async function sendTestPayout(_: FormState, fd: FormData): Promise<FormSt
   if (!razorpayxConfigured()) return { error: "RazorpayX test keys or account number aren't configured on this server." };
   if (!rateLimit(`rzpx:${a.user.id}`, 10, 60 * 60_000).ok) return { error: "Too many payouts. Try again in a while." };
   const p = payoutSchema.safeParse(Object.fromEntries(fd)); if (!p.success) return { error: p.error.issues[0].message };
-  const d = p.data; if (d.amount > 10_000_00) return { error: "Test payouts are limited to ₹10,000." };
+  const d = p.data; if (d.amount > 10_000_00) return { error: "Payouts are limited to ₹10,000 for now." };
   if (d.accountId && !(await ownAccount(a, d.accountId))) return { error: "That account wasn't found." };
   const key = randomUUID(); // one per submit; the database's unique key also stops the same submit being stored twice
   const row = await a.supabase.from("razorpayx_payouts").insert({ user_id: a.user.id, payee_name: d.name, upi_masked: maskUpi(d.upi), amount_minor: d.amount, note: d.note || null, idempotency_key: key, status: "queued", account_id: d.accountId ?? null }).select("id").single();
@@ -78,7 +78,7 @@ export async function sendTestPayout(_: FormState, fd: FormData): Promise<FormSt
     const fund = await createUpiFundAccount({ contactId: contact.id, upi: d.upi });
     const out = await createPayout({ fundAccountId: fund.id, amountMinor: d.amount, referenceId: row.data.id.replace(/-/g, ""), narration: d.note || "SmartFin test", idempotencyKey: key });
     await a.supabase.from("razorpayx_payouts").update({ payout_id: out.id, status: out.status, utr: out.utr }).eq("id", row.data.id);
-    revalidatePath("/payouts"); revalidatePath("/integrations"); return { ok: `Test payout of ${formatMoney(d.amount)} created (${out.status}).` };
+    revalidatePath("/payouts"); revalidatePath("/integrations"); return { ok: `${razorpayIsLive() ? "Payout" : "Test payout"} of ${formatMoney(d.amount)} created (${out.status}).` };
   } catch (e) {
     const msg = providerErr(e); await a.supabase.from("razorpayx_payouts").update({ status: "failed", failure: msg.slice(0, 300) }).eq("id", row.data.id);
     revalidatePath("/payouts"); revalidatePath("/integrations"); return { error: msg };
@@ -135,8 +135,8 @@ export async function confirmTopup(orderId: string, paymentId: string, signature
   if (t.status === "paid") return { ok: "This payment was already recorded." };
   const claim = await a.supabase.from("razorpay_topups").update({ status: "paid", payment_id: String(paymentId) }).eq("order_id", String(orderId)).eq("status", "created").select("id");
   if (claim.error || !claim.data?.length) return { ok: "This payment was already recorded." };
-  const tx = await a.supabase.from("transactions").insert({ user_id: a.user.id, type: "income", amount_minor: Number(t.amount_minor), occurred_at: new Date().toISOString(), name: "Added with Razorpay (test)", to_account_id: t.account_id, source: "integration", external_ref: String(paymentId), tags: ["razorpay-test"] });
+  const tx = await a.supabase.from("transactions").insert({ user_id: a.user.id, type: "income", amount_minor: Number(t.amount_minor), occurred_at: new Date().toISOString(), name: `Added with Razorpay${testTag()}`, to_account_id: t.account_id, source: "integration", external_ref: String(paymentId), tags: [razorpayIsLive() ? "razorpay" : "razorpay-test"] });
   if (tx.error) { await a.supabase.from("razorpay_topups").update({ status: "created", payment_id: null }).eq("order_id", String(orderId)); return { error: "The payment went through but we couldn't record it. Try the same payment again." }; } // nothing half-recorded
   for (const p of ["/integrations", "/transactions", "/dashboard", "/income"]) revalidatePath(p);
-  return { ok: `Added ${formatMoney(Number(t.amount_minor))} (test payment) to your account.` };
+  return { ok: `Added ${formatMoney(Number(t.amount_minor))}${razorpayIsLive() ? "" : " (test payment)"} to your account.` };
 }

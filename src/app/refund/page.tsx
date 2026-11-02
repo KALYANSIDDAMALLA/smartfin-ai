@@ -1,0 +1,11 @@
+import Link from "next/link";
+export const metadata = { title: "Refund & cancellation policy · SmartFin AI" };
+export default function Refund() {
+  return (<main className="mx-auto max-w-2xl px-4 py-10 text-sm leading-6"><Link href="/" className="text-brand">← SmartFin AI</Link>
+    <h1 className="mt-4 text-2xl font-semibold">Refund &amp; cancellation policy</h1><p className="mt-1 text-muted">Draft for launch review — have it reviewed by legal counsel before publishing.</p>
+    <h2 className="mt-6 font-medium">What this covers</h2><p>SmartFin AI is free to use. The only payments taken through the app are ones you choose to make yourself, such as adding money to one of your own accounts or paying a loan instalment. They are processed by Razorpay. SmartFin AI does not charge a fee on top and does not hold your money.</p>
+    <h2 className="mt-6 font-medium">Failed or duplicate payments</h2><p>If money is debited but the payment fails, or you are charged twice for the same payment, it is returned to your original payment method automatically by Razorpay and your bank, usually within 5–7 working days. You do not need to do anything. If it has not arrived after 7 working days, contact us with the payment ID.</p>
+    <h2 className="mt-6 font-medium">Requesting a refund</h2><p>If a payment was made by mistake, contact us on the <Link href="/contact" className="text-brand underline">Contact page</Link> within 7 days with the payment ID and the amount. We review each request and, if approved, refund the full amount to the original payment method. Refunds normally reach your account within 5–7 working days after approval, depending on your bank or card issuer.</p>
+    <h2 className="mt-6 font-medium">Cancelling</h2><p>There is nothing to cancel: no subscription or recurring charge exists. A payment, once successfully completed, cannot be cancelled, only refunded under the rules above. You can delete your account and data at any time from Settings.</p>
+    <h2 className="mt-6 font-medium">Records inside the app</h2><p>A refunded payment is not removed from your records automatically. Edit or delete the matching entry in Transactions so your totals stay right.</p></main>);
+}

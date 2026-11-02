@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/auth", "/privacy", "/terms"];
+const PUBLIC = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/auth", "/privacy", "/terms", "/refund", "/contact"];
 const isPublic = (p: string) => PUBLIC.some((x) => p === x || (x !== "/" && p.startsWith(x + "/")));
 
 export async function proxy(request: NextRequest) {

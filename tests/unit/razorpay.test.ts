@@ -1,9 +1,9 @@
 import { createHmac } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
-import { razorpayConfigured, razorpayLiveKeyBlocked, razorpayxConfigured, verifyCheckoutSignature, verifyWebhookSignature } from "@/lib/integrations/razorpay";
+import { razorpayConfigured, razorpayIsLive, razorpayKeyMismatch, razorpayMode, razorpayxConfigured, testTag, verifyCheckoutSignature, verifyWebhookSignature } from "@/lib/integrations/razorpay";
 
 const sign = (secret: string, data: string) => createHmac("sha256", secret).update(data).digest("hex");
-const ENV = ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAYX_ACCOUNT_NUMBER"] as const;
+const ENV = ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAYX_ACCOUNT_NUMBER", "RAZORPAY_MODE", "VERCEL_ENV", "RAZORPAY_ALLOW_LIVE_LOCAL"] as const;
 afterEach(() => { for (const k of ENV) delete process.env[k]; });
 
 describe("Checkout signature", () => {
@@ -33,7 +33,7 @@ describe("Webhook signature", () => {
 });
 
 describe("Test-mode guard", () => {
-  it("is off with no keys", () => { expect(razorpayConfigured()).toBe(false); expect(razorpayLiveKeyBlocked()).toBe(false); });
+  it("is off with no keys", () => { expect(razorpayConfigured()).toBe(false); expect(razorpayKeyMismatch()).toBe(false); });
   it("accepts test keys; RazorpayX also needs the account number", () => {
     process.env.RAZORPAY_KEY_ID = "rzp_test_abc"; process.env.RAZORPAY_KEY_SECRET = "s";
     expect(razorpayConfigured()).toBe(true); expect(razorpayxConfigured()).toBe(false);
@@ -41,6 +41,27 @@ describe("Test-mode guard", () => {
   });
   it("refuses live keys", () => {
     process.env.RAZORPAY_KEY_ID = "rzp_live_abc"; process.env.RAZORPAY_KEY_SECRET = "s"; process.env.RAZORPAYX_ACCOUNT_NUMBER = "1";
-    expect(razorpayConfigured()).toBe(false); expect(razorpayxConfigured()).toBe(false); expect(razorpayLiveKeyBlocked()).toBe(true);
+    expect(razorpayConfigured()).toBe(false); expect(razorpayxConfigured()).toBe(false); expect(razorpayKeyMismatch()).toBe(true);
   });
+});
+
+describe("Live-mode switch (safe by default)", () => {
+  const live = (k = "rzp_live_abc") => { process.env.RAZORPAY_MODE = "live"; process.env.RAZORPAY_KEY_ID = k; process.env.RAZORPAY_KEY_SECRET = "s"; };
+  it("defaults to test mode and labels it", () => { expect(razorpayMode()).toBe("test"); expect(razorpayIsLive()).toBe(false); expect(testTag()).toBe(" (test)"); });
+  it("RAZORPAY_MODE=live alone is NOT enough: localhost and previews stay in test mode and reject live keys", () => {
+    live(); expect(razorpayMode()).toBe("test"); expect(razorpayConfigured()).toBe(false); expect(razorpayKeyMismatch()).toBe(true);
+    process.env.VERCEL_ENV = "preview"; expect(razorpayMode()).toBe("test");
+  });
+  it("goes live only on the production deployment with live keys", () => {
+    live(); process.env.VERCEL_ENV = "production";
+    expect(razorpayMode()).toBe("live"); expect(testTag()).toBe(""); expect(razorpayConfigured()).toBe(true); expect(razorpayKeyMismatch()).toBe(false);
+  });
+  it("in live mode a test key switches Razorpay off instead of guessing", () => {
+    live("rzp_test_abc"); process.env.VERCEL_ENV = "production";
+    expect(razorpayMode()).toBe("live"); expect(razorpayConfigured()).toBe(false); expect(razorpayKeyMismatch()).toBe(true);
+  });
+  it("live mode on a local machine needs an explicit opt-in", () => {
+    live(); process.env.RAZORPAY_ALLOW_LIVE_LOCAL = "1"; expect(razorpayMode()).toBe("live"); expect(razorpayConfigured()).toBe(true);
+  });
+  it("a mode other than exactly 'live' is test", () => { process.env.RAZORPAY_MODE = "LIVE"; process.env.VERCEL_ENV = "production"; expect(razorpayMode()).toBe("test"); });
 });
