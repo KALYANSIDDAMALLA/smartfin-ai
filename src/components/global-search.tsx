@@ -54,14 +54,18 @@ export function GlobalSearch({ ctx, className }: { ctx?: Pick<SearchCtx, "catego
   };
   let lastSection = "";
   return (
-    <div role="search" className={cn("relative", className)}>
+    // On phones the wrapper is NOT positioned, so the suggestion list anchors to the whole header bar (full width, nothing cut off the left edge);
+    // from md up the wrapper is positioned and the list hangs under the search box as before.
+    <div role="search" className={cn("md:relative", className)}>
+      <div className="relative">
       <Search size={16} className="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" aria-hidden />
       <input ref={input} name="q" role="combobox" aria-expanded={open} aria-controls="global-search-list" aria-autocomplete="list" aria-activedescendant={open && items[active] ? `gs-${items[active].id}` : undefined}
         aria-label="Search pages or transactions" autoComplete="off" value={q} placeholder={narrow ? "Search…" : "Search pages or transactions…  Ctrl K"}
         onChange={(e) => { setQ(e.target.value); setActive(0); setOpen(true); }} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={onKeyDown}
         className="h-9 w-full rounded-lg border border-line bg-bg/60 pl-9 pr-3 text-sm outline-none transition focus:bg-bg" />
+      </div>
       {open && items.length > 0 && (
-        <ul id="global-search-list" role="listbox" aria-label="Suggestions" className="absolute right-0 top-full z-50 mt-2 max-h-[min(26rem,70vh)] w-[max(100%,22rem)] max-w-[92vw] overflow-y-auto pop rounded-2xl p-1.5">
+        <ul id="global-search-list" role="listbox" aria-label="Suggestions" className="absolute inset-x-2 top-full z-50 mt-2 max-h-[min(26rem,70vh)] overflow-y-auto pop !bg-surface rounded-2xl p-1.5 md:inset-x-auto md:right-0 md:w-[max(100%,22rem)] md:max-w-[92vw]">
           {items.map((it, idx) => {
             const head = it.section !== lastSection ? it.section : null; lastSection = it.section; const Icon = it.icon;
             return (
