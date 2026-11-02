@@ -68,7 +68,7 @@ export default async function Home() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" aria-label="SmartFin AI home" className="text-brand"><Logo /></Link>
           <nav aria-label="Primary" className="hidden items-center gap-3 text-sm text-muted md:flex lg:gap-6"><a href="#showcase" className="hover:text-fg">See it</a><a href="#features" className="hover:text-fg">Features</a><a href="#how" className="hover:text-fg">How it works</a><a href="#ai" className="hover:text-fg">AI</a><a href="#faq" className="hover:text-fg">FAQ</a><Link href="/contact" className="whitespace-nowrap hover:text-fg">Contact us</Link></nav>
-          <div className="flex items-center gap-2 text-sm"><ThemeToggle /><Link href="/login" className="rounded-xl border border-brand/45 bg-brand/10 px-4 py-2 font-semibold text-brand shadow-sm transition hover:border-brand hover:bg-brand/20">Log in</Link><Link href="/register" className="btn-shine glow rounded-xl bg-linear-to-b from-brand to-brand/85 px-4 py-2 font-semibold text-brandfg shadow-lg shadow-brand/40 ring-1 ring-white/30 transition hover:brightness-110">Sign up</Link></div>
+          <div className="flex items-center gap-2 text-sm"><ThemeToggle /><Link href="/login" className="btn-shine rounded-xl border border-brand/45 bg-brand/10 px-4 py-2 font-semibold text-brand shadow-sm transition hover:border-brand hover:bg-brand/20">Log in</Link><Link href="/register" className="btn-shine glow rounded-xl bg-linear-to-b from-brand to-brand/85 px-4 py-2 font-semibold text-brandfg shadow-lg shadow-brand/40 ring-1 ring-white/30 transition hover:brightness-110">Sign up</Link></div>
         </div>
       </header>
 
@@ -84,7 +84,7 @@ export default async function Home() {
                 <p className="mt-5 max-w-lg text-lg text-white/80">SmartFin AI tracks your income and spending, keeps you inside your budgets, and turns your own numbers into clear, AI-assisted insights.</p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link href="/register" className="btn-shine inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-semibold text-indigo-900 shadow-xl shadow-white/20 ring-2 ring-white/50 transition hover:bg-indigo-50">Create free account <ArrowRight size={16} aria-hidden /></Link>
-                  <Link href="/login" className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-white/70 bg-white/15 px-6 text-sm font-semibold shadow-lg shadow-black/20 backdrop-blur transition hover:border-white hover:bg-white/25">Log in</Link>
+                  <Link href="/login" className="btn-shine inline-flex h-12 items-center justify-center rounded-xl border-2 border-white/70 bg-white/15 px-6 text-sm font-semibold shadow-lg shadow-black/20 backdrop-blur transition hover:border-white hover:bg-white/25">Log in</Link>
                 </div>
                 <ul className="mt-8 grid gap-2 text-sm text-white/85 sm:grid-cols-2">
                   {["Email-verified accounts", "Your data stays yours", "Export or delete anytime", "No bank passwords, ever"].map((t) => <li key={t} className="flex items-center gap-2"><Check size={16} className="text-emerald-300" aria-hidden />{t}</li>)}
