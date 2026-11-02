@@ -1,0 +1,187 @@
+openapi: 3.0.3
+info:
+  title: SmartFin AI web endpoints
+  version: "1.0.0"
+  description: |
+    The plain web endpoints of SmartFin AI (Next.js route handlers).
+
+    **Most of the app is not here.** Saving transactions, loans, budgets, PINs, imports and the AI assistant run as
+    *server actions* (functions called by the app's own forms), which are not public URLs. They are listed in
+    [docs/API.md](https://github.com/KALYANSIDDAMALLA/smartfin-ai/blob/main/docs/API.md).
+
+    **Sign-in.** Endpoints marked with a lock need a signed-in browser session (a Supabase auth cookie set when you log in).
+    Without one they answer `401`. Every query runs as the signed-in user, and database row-level security means you only ever
+    see your own rows. In this page, only `GET` requests can be tried; changing requests (`POST`) are shown but disabled.
+  contact:
+    name: Kalyan Siddamalla
+    email: kalyansiddamalla8111@gmail.com
+servers:
+  - url: /
+    description: This site
+tags:
+  - name: System
+  - name: Your data
+  - name: Account
+  - name: Sign-in
+paths:
+  /api/health:
+    get:
+      tags: [System]
+      summary: Health check
+      description: 'Returns an object with `ok` set to true when the site is up. No sign-in needed. Used by monitors and deploy checks.'
+      responses:
+        "200":
+          description: The site is running.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+  /api/export:
+    get:
+      tags: [Your data]
+      summary: Download all your data
+      description: |
+        Returns every table that belongs to you (profile, accounts, transactions, loans, budgets, goals, notifications and more) as one JSON file.
+        Rate limited to 5 exports per 10 minutes.
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: A JSON file named `smartfin-export.json`.
+          headers:
+            Content-Disposition: { schema: { type: string, example: 'attachment; filename="smartfin-export.json"' } }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exportedAt: { type: string, format: date-time }
+                  email: { type: string, format: email }
+                additionalProperties: true
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooMany" }
+  /api/reports:
+    get:
+      tags: [Your data]
+      summary: Download a report (CSV, Excel or PDF)
+      description: |
+        Builds a report on demand for a date range from your own records. There are no report ids to guess.
+        Rate limited to 20 reports per 10 minutes.
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: format
+          in: query
+          required: true
+          schema: { type: string, enum: [csv, xlsx, pdf] }
+        - name: range
+          in: query
+          description: Which period. Defaults to the current month. Use `custom` together with `from` and `to`.
+          schema: { type: string, enum: [today, week, month, year, custom], default: month }
+        - name: from
+          in: query
+          description: Start date for `range=custom`, as `YYYY-MM-DD`.
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          description: End date for `range=custom`, as `YYYY-MM-DD`. Must not be before `from`.
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: The report file.
+          content:
+            text/csv: { schema: { type: string } }
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: { schema: { type: string, format: binary } }
+            application/pdf: { schema: { type: string, format: binary } }
+        "400":
+          description: The `format` is missing or not one of csv, xlsx, pdf.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooMany" }
+  /api/avatar:
+    get:
+      tags: [Account]
+      summary: Your profile picture
+      description: Redirects to a short-lived (15 minutes) signed link to your own profile picture. The browser caches it.
+      security: [{ sessionCookie: [] }]
+      responses:
+        "307":
+          description: Redirect to the signed picture URL.
+          headers:
+            Location: { schema: { type: string, format: uri } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { description: You have no profile picture. }
+  /api/account/delete:
+    post:
+      tags: [Account]
+      summary: Permanently delete your account
+      description: |
+        **Destructive and irreversible.** Deletes your stored files and then your account and every record you own.
+        The session is re-verified with the auth server first. A reason is required. Rate limited.
+
+        Disabled in this documentation page on purpose.
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, maxLength: 100, description: Why you are leaving. }
+                detail: { type: string, maxLength: 300, description: Optional extra detail. }
+      responses:
+        "303":
+          description: |
+            Redirect. On success to `/login?deleted=1`. On a problem to `/settings?delete_error=` with one of `rate`, `reason`, `config` or `failed`.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /auth/callback:
+    get:
+      tags: [Sign-in]
+      summary: Finish a login (email link or Google)
+      description: |
+        The address that Supabase sends you back to after you click an email link or sign in with Google. Exchanges the one-time `code` for a session cookie,
+        then redirects to `next` (only paths on this site are accepted) or to `/dashboard`. A bad or used code redirects to `/login?error=link`.
+      parameters:
+        - name: code
+          in: query
+          schema: { type: string }
+        - name: next
+          in: query
+          description: Where to go afterwards. Must start with a single `/`.
+          schema: { type: string, default: /dashboard }
+      responses:
+        "307":
+          description: Redirect to the app (success) or to the login page (failure).
+          headers:
+            Location: { schema: { type: string } }
+  /auth/signout:
+    post:
+      tags: [Sign-in]
+      summary: Log out
+      description: Ends the session and redirects to `/login`.
+      responses:
+        "303":
+          description: Redirect to the login page.
+          headers:
+            Location: { schema: { type: string, example: /login } }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sb-auth-token
+      description: The Supabase session cookie set by the app when you log in. You do not create it by hand; log in on the site and your browser sends it.
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string, example: Unauthorized }
+  responses:
+    Unauthorized:
+      description: Not signed in.
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    TooMany:
+      description: Too many requests in a short time. Try again later.
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }

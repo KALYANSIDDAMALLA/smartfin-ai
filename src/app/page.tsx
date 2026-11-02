@@ -192,7 +192,7 @@ export default async function Home() {
                 {FOUNDER.phone && <li><a href={`tel:${FOUNDER.phone.replace(/[^+\d]/g, "")}`} className="inline-flex min-h-8 items-center gap-2 transition hover:text-brand"><Phone size={15} className="shrink-0 text-brand" aria-hidden />{FOUNDER.phone}</a></li>}
               </ul></div>}</div>
           <nav aria-label="Product"><h2 className="text-sm font-medium">Product</h2><ul className="mt-3 grid gap-2 text-sm text-muted">
-            <li><a href="#features" className="hover:text-fg">Features</a></li><li><a href="#how" className="hover:text-fg">How it works</a></li><li><a href="#ai" className="hover:text-fg">AI &amp; privacy</a></li><li><a href="#faq" className="hover:text-fg">FAQ</a></li></ul></nav>
+            <li><a href="#features" className="hover:text-fg">Features</a></li><li><a href="#how" className="hover:text-fg">How it works</a></li><li><a href="#ai" className="hover:text-fg">AI &amp; privacy</a></li><li><a href="#faq" className="hover:text-fg">FAQ</a></li><li><Link href="/api-docs" className="hover:text-fg">API docs</Link></li></ul></nav>
           <nav aria-label="Account and legal"><h2 className="text-sm font-medium">Account &amp; legal</h2><ul className="mt-3 grid gap-2 text-sm text-muted">
             <li><Link href="/register" className="hover:text-fg">Create account</Link></li><li><Link href="/login" className="hover:text-fg">Log in</Link></li><li><Link href="/privacy" className="hover:text-fg">Privacy policy</Link></li><li><Link href="/terms" className="hover:text-fg">Terms of use</Link></li><li><Link href="/contact" className="hover:text-fg">Contact us</Link></li></ul></nav>
         </div>
