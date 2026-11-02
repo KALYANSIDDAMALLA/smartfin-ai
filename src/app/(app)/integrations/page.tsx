@@ -9,8 +9,8 @@ import { disconnectBank, refreshConnection, syncConnection } from "@/app/actions
 import { ActionForm } from "@/components/action-form";
 import { AddAccountForm, BankLinkForm } from "@/components/bank-forms";
 import { CheckBalance } from "@/components/check-balance";
-import { AccountRazorpay, type PayoutRow, type Verification } from "@/components/account-razorpay";
-import { demoLiveBlock, razorpayConfigured, razorpayIsLive, razorpayxConfigured } from "@/lib/integrations/razorpay";
+import { RazorpayHub, type HubStatus, type PayoutRow, type Verification } from "@/components/account-razorpay";
+import { demoLiveBlock, razorpayConfigured, razorpayIsLive, razorpayKeyMismatch, razorpayxConfigured } from "@/lib/integrations/razorpay";
 import { SummaryLine } from "@/components/summary-line";
 import { Badge, Card, PageHeader } from "@/components/ui";
 
@@ -38,7 +38,11 @@ export default async function BankLinks() {
   const demoBlocked = !!demoLiveBlock(user.email); // live mode + shared demo login: no real payments
   const checkoutReady = razorpayConfigured() && !demoBlocked; const payoutsReady = razorpayxConfigured() && !demoBlocked;
   const verifOf = (id: string): Verification | null => { const v = (verifs ?? []).find((x) => x.account_id === id); return v ? { status: v.status as Verification["status"], name: v.registered_name, upi: v.upi_masked } : null; };
-  const payoutsOf = (id: string): PayoutRow[] => (pays ?? []).filter((p) => p.account_id === id).slice(0, 3).map((p) => ({ id: p.id, payee: p.payee_name, upi: p.upi_masked, amountLabel: m(Number(p.amount_minor)), status: p.status,
+  const status: HubStatus = demoBlocked ? { tone: "neutral", label: "Off for the demo account", detail: "Real payments are turned off for the shared demo account. Create your own account to use Razorpay." }
+    : razorpayKeyMismatch() ? { tone: "bad", label: "Keys don't match the mode", detail: `The Razorpay keys on this server don't match ${razorpayIsLive() ? "live" : "test"} mode, so Razorpay is switched off.` }
+    : !razorpayConfigured() ? { tone: "neutral", label: "Not set up", detail: "Razorpay keys are not configured on this server yet." }
+    : { tone: "good", label: razorpayIsLive() ? "Live mode" : "Test mode", detail: payoutsReady ? "Add money, Verify account and Send money are available." : "Add money is available. Verify and Send money need a RazorpayX account number." };
+  const payoutsOf = (id: string): PayoutRow[] => (pays ?? []).filter((p) => p.account_id === id).slice(0, 5).map((p) => ({ id: p.id, payee: p.payee_name, upi: p.upi_masked, amountLabel: m(Number(p.amount_minor)), status: p.status,
     when: new Date(p.created_at).toLocaleString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) }));
   const linked = (conns ?? []).filter((c) => c.status === "connected").length; const nAcc = accounts?.length ?? 0;
   return (
@@ -75,10 +79,17 @@ export default async function BankLinks() {
           {!!nAcc && <ul className="mb-5 grid gap-2 sm:grid-cols-2">{accounts!.map((a) => (
             <li key={a.id} className="rounded-xl border border-line bg-surface/60 px-3 py-2.5"><div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white" style={{ background: `hsl(${bankHue(a.name)} 60% 45%)` }}><Landmark size={16} aria-hidden /></span>
-              <div className="min-w-0"><p className="truncate text-sm font-medium">{a.name}</p><p className="text-xs text-muted">{a.kind === "bank" ? "Bank account" : a.kind === "credit_card" ? ACCOUNT_TYPES.credit_card : a.kind === "wallet" ? ACCOUNT_TYPES.wallet : a.kind === "cash" ? ACCOUNT_TYPES.cash : "Other"}{Number(a.opening_balance_minor) ? ` · opening ${m(Number(a.opening_balance_minor))}` : ""}</p></div></div>
+              <div className="min-w-0"><p className="truncate text-sm font-medium">{a.name}{verifOf(a.id)?.status === "verified" && <> <Badge tone="good">Verified</Badge></>}</p><p className="text-xs text-muted">{a.kind === "bank" ? "Bank account" : a.kind === "credit_card" ? ACCOUNT_TYPES.credit_card : a.kind === "wallet" ? ACCOUNT_TYPES.wallet : a.kind === "cash" ? ACCOUNT_TYPES.cash : "Other"}{Number(a.opening_balance_minor) ? ` · opening ${m(Number(a.opening_balance_minor))}` : ""}</p></div></div>
               <ActionForm action={archiveAccount} compact submit="Remove" variant="ghost" confirm={`Remove “${a.name}” from your list? Past transfers stay.`}><input type="hidden" name="id" value={a.id} /></ActionForm></div>
-              <AccountRazorpay accountId={a.id} verification={verifOf(a.id)} payouts={payoutsOf(a.id)} checkoutReady={checkoutReady} payoutsReady={payoutsReady} live={razorpayIsLive()} /></li>))}</ul>}
+            </li>))}</ul>}
           <h3 className="mb-2 text-sm font-semibold">Add an account</h3><AddAccountForm />
+        </Card>
+
+        <Card>
+          <h2 className="mb-1 flex items-center gap-2 font-medium"><ShieldCheck size={16} className="text-brand" aria-hidden />Razorpay payments</h2>
+          <p className="mb-4 text-sm text-muted">Add money to an account, check that a UPI id really belongs to it, or send a payout. Razorpay moves the money; it does not read your bank balance or transactions (that is what bank linking above is for).</p>
+          <RazorpayHub accounts={(accounts ?? []).map((a) => ({ id: a.id, name: a.name }))} status={status} live={razorpayIsLive()} checkoutReady={checkoutReady} payoutsReady={payoutsReady}
+            verifs={Object.fromEntries((accounts ?? []).map((a) => [a.id, verifOf(a.id)]))} payouts={Object.fromEntries((accounts ?? []).map((a) => [a.id, payoutsOf(a.id)]))} />
         </Card>
 
         <Card><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-medium">Prefer not to link?</h2><p className="text-sm text-muted">Import a bank statement (CSV, Excel or PDF) or add transactions yourself. Both always work.</p></div>
