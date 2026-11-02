@@ -61,6 +61,8 @@ export default async function Home() {
     <div id="top" className="min-h-screen">
       {/* Full-page picture behind everything (public/home-bg.svg, and home-bg-dark.svg in dark mode). Home page only. */}
       <div aria-hidden className="home-art" />
+      {/* Rupee coins: placed from the middle of the empty gap beside the content (see .home-coins in globals.css); only shown when the gap is wide enough for them. */}
+      <div aria-hidden className="home-coins"><i className="coin coin-l1" /><i className="coin coin-l2" /><i className="coin coin-r1" /><i className="coin coin-r2" /></div>
       <header className="glass sticky top-3 z-20 mx-3 mt-3 rounded-2xl sm:mx-auto sm:max-w-6xl">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" aria-label="SmartFin AI home" className="text-brand"><Logo /></Link>

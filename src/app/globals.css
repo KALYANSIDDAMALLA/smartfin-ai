@@ -136,6 +136,21 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 .home-art { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: #e3e7f6 url(/home-bg.svg) center bottom / cover no-repeat; }
 .dark .home-art { background-color: #05060f; background-image: url(/home-bg-dark.svg); }
 
+/* Rupee coins, centred in the empty gap on each side of the page content (content is max 72rem wide, centred).
+   Right gap centre = 75% + 18rem; left gap centre = 25% - 18rem. Hidden below 1380px, where the gap is narrower than a coin. */
+.home-coins { display: none; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+@media (min-width: 1380px) { .home-coins { display: block; } }
+.coin { position: absolute; display: grid; place-items: center; border-radius: 9999px; transform: translate(-50%, -50%); width: var(--d); height: var(--d);
+  border: 3px solid #f59e0b; background: rgba(251, 191, 36, .18); color: #d97706; font-style: normal; font-weight: 700; font-size: calc(var(--d) * .52); line-height: 1; }
+.coin::before { content: ""; position: absolute; inset: 14%; border-radius: 9999px; border: 1.5px solid rgba(245, 158, 11, .45); }
+.coin::after { content: "₹"; }
+.dark .coin { border-color: #fcd34d; color: #fcd34d; background: rgba(251, 191, 36, .12); }
+.dark .coin::before { border-color: rgba(252, 211, 77, .35); }
+.coin-l1 { --d: 76px; left: calc(25% - 18rem); top: 24%; }
+.coin-l2 { --d: 50px; left: calc(25% - 18rem); top: 62%; }
+.coin-r1 { --d: 72px; left: calc(75% + 18rem); top: 34%; }
+.coin-r2 { --d: 48px; left: calc(75% + 18rem); top: 72%; }
+
 /* ---- Touch devices: comfortable tap targets without changing the desktop look ---- */
 @media (pointer: coarse) {
   /* Small links get an invisible, larger hit area (no layout change). */
