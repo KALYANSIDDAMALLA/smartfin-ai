@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartFin AI — personal finance for India</title>
+<meta name="description" content="SmartFin AI is an AI-assisted personal finance tracker for India: expenses, budgets, goals, loans and EMIs, statement imports and plain-language analysis.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Ctext x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#14162a;--muted:#5b6078;--line:#e3e5f0;--brand:#4f46e5;--brand-ink:#fff;--soft:#eef0ff;--good:#0f9d6e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1020;--card:#171a30;--text:#eceefb;--muted:#9aa0c0;--line:#2a2e4a;--brand:#7c78ff;--brand-ink:#0e1020;--soft:#1f2342;--good:#34d399}}
+:root[data-theme="dark"]{--bg:#0e1020;--card:#171a30;--text:#eceefb;--muted:#9aa0c0;--line:#2a2e4a;--brand:#7c78ff;--brand-ink:#0e1020;--soft:#1f2342;--good:#34d399}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--brand)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;text-decoration:none;color:var(--text)}
+.logo i{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--brand);color:var(--brand-ink);font-style:normal}
+nav a{margin-left:18px;text-decoration:none;color:var(--muted);font-size:15px}
+.hero{padding:56px 0 40px;text-align:center}
+h1{font-size:clamp(2rem,5vw,3.2rem);line-height:1.15;margin:0 0 16px;letter-spacing:-.02em}
+.lead{max-width:640px;margin:0 auto 28px;color:var(--muted);font-size:1.1rem}
+.btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:12px 22px;border-radius:12px;font-weight:600;text-decoration:none;border:1px solid var(--line);color:var(--text);background:var(--card)}
+.btn.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.btn[aria-disabled="true"]{opacity:.65;cursor:not-allowed}
+.note{margin-top:12px;font-size:13px;color:var(--muted)}
+section{padding:36px 0}
+h2{font-size:1.6rem;margin:0 0 6px;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+.card h3{margin:0 0 6px;font-size:1.05rem}
+.card p{margin:0;color:var(--muted);font-size:.95rem}
+.tag{display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border-radius:999px;background:var(--soft);font-size:13px}
+.status li{margin:6px 0}
+.ok{color:var(--good);font-weight:600}
+footer{padding:32px 0 48px;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="#"><i>S</i>SmartFin AI</a>
+    <nav><a href="#features">Features</a><a href="#stack">Built with</a><a href="#status">Status</a><a id="repo-link" href="https://github.com/KALYANSIDDAMALLA/smartfin-ai">Code</a></nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Know where your money goes. Plan where it should go.</h1>
+      <p class="lead">An AI-assisted personal finance tracker for India. Record spending, set budgets and goals, track loans and EMIs, import bank statements, and get plain-language answers about your own numbers.</p>
+      <div class="btns">
+        <!-- Set DEMO_URL below once the public demo is deployed. Until then this button stays disabled on purpose. -->
+        <a id="demo-btn" class="btn primary" aria-disabled="true" href="#">Live demo coming soon</a>
+        <a class="btn" href="https://github.com/KALYANSIDDAMALLA/smartfin-ai">View the code</a>
+      </div>
+      <p class="note" id="demo-note">The demo will use made-up data only. No real accounts or money.</p>
+    </div>
+
+    <section id="features">
+      <h2>What it does</h2>
+      <p class="sub">Everything below is built into the app.</p>
+      <div class="grid">
+        <div class="card"><h3>Transactions &amp; categories</h3><p>Expenses, income, transfers and refunds across daily, weekly, monthly and yearly views, with search and filters.</p></div>
+        <div class="card"><h3>Budgets &amp; goals</h3><p>Daily to yearly budgets with threshold alerts, plus savings goals with contributions and progress.</p></div>
+        <div class="card"><h3>Loans &amp; EMIs</h3><p>Reducing-balance EMI schedules, what is still owed, interest paid and left, and the payoff date.</p></div>
+        <div class="card"><h3>Statement &amp; receipt import</h3><p>CSV, Excel, PDF and receipt images are previewed first, with duplicate detection, before anything is saved.</p></div>
+        <div class="card"><h3>AI analysis &amp; assistant</h3><p>Monthly insights and a chat that answers from your recorded numbers, with a built-in fallback when no AI key is set.</p></div>
+        <div class="card"><h3>Savings planner &amp; reports</h3><p>A monthly savings plan, a what-if simulator, and PDF/CSV exports.</p></div>
+        <div class="card"><h3>Bank linking (Account Aggregator)</h3><p>Consent-based, read-only linking through an RBI-regulated Account Aggregator. Built for the Setu sandbox; the demo shows seeded banks.</p></div>
+        <div class="card"><h3>Razorpay &amp; RazorpayX (test mode)</h3><p>Pay an EMI with Razorpay Checkout and send UPI payouts, with signature-verified confirmation. Test keys only.</p></div>
+      </div>
+    </section>
+
+    <section id="stack">
+      <h2>Built with</h2>
+      <p class="sub">Money is stored as integer paise; every user's data is isolated by database row-level security.</p>
+      <div>
+        <span class="tag">Next.js 16 (App Router)</span><span class="tag">React 19</span><span class="tag">TypeScript</span><span class="tag">Tailwind CSS</span><span class="tag">Supabase (Postgres + Auth + RLS)</span><span class="tag">Gemini</span><span class="tag">Razorpay / RazorpayX</span><span class="tag">Setu Account Aggregator</span><span class="tag">Vitest &amp; Playwright</span>
+      </div>
+    </section>
+
+    <section id="status">
+      <h2>Honest status</h2>
+      <ul class="status">
+        <li><span class="ok">Working:</span> tracking, budgets, goals, loans, imports, analysis, reports, demo data.</li>
+        <li><span class="ok">Test mode only:</span> Razorpay and RazorpayX. No live payments.</li>
+        <li><span class="ok">Sandbox needed:</span> live bank linking needs Account Aggregator credentials.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>© SmartFin AI — a personal project. This page is static; the app itself runs on a server and is not hosted on GitHub Pages.</footer>
+</div>
+<script>
+  // Single place to switch the demo on: put the public demo URL here (https only).
+  var DEMO_URL = "";
+  if (/^https:\/\//.test(DEMO_URL)) {
+    var b = document.getElementById("demo-btn");
+    b.href = DEMO_URL; b.textContent = "Try the live demo"; b.removeAttribute("aria-disabled"); b.rel = "noopener";
+  } else {
+    document.getElementById("demo-btn").addEventListener("click", function (e) { e.preventDefault(); });
+  }
+</script>
+</body>
+</html>
