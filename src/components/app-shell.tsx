@@ -93,7 +93,7 @@ export function AppShell({ children, name, unread, avatarUrl, searchCtx, timezon
     });
   };
   const renderLogout = (compact: boolean) => (
-    <div className="sticky bottom-0 mt-auto bg-gradient-to-t from-surface/80 via-surface/40 to-transparent px-3 pb-3 pt-4">
+    <div className="shrink-0 border-t border-line/50 px-3 pb-3 pt-2.5">
       <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(false); confirmLogout(); }} aria-label="Log out" title={compact ? "Log out" : undefined}
         className={cn("flex min-h-[38px] w-full items-center rounded-xl border border-bad/50 bg-bad/10 text-xs font-semibold uppercase tracking-wide text-bad shadow-sm transition hover:bg-bad hover:text-white focus-visible:outline-2 focus-visible:outline-bad", compact ? "justify-center py-2" : "gap-2.5 px-3 py-2")}>
         <LogOut size={compact ? 18 : 15} aria-hidden />{!compact && <span className="flex-1 text-left">Log out</span>}</button>
@@ -101,20 +101,23 @@ export function AppShell({ children, name, unread, avatarUrl, searchCtx, timezon
   );
   return (
     <div className="flex min-h-screen">
-      <aside aria-label="Sidebar" title={collapsed ? "Click to expand" : undefined} onClick={() => { if (collapsed) setCollapsedRaw("0"); }} className={cn(collapsed && "cursor-pointer", "glass sticky top-3 m-3 hidden h-[calc(100vh-1.5rem)] shrink-0 overflow-y-auto overflow-x-hidden rounded-2xl transition-[width] duration-200 lg:flex lg:flex-col", collapsed ? "w-[4.5rem]" : "w-60")}>
+      <aside aria-label="Sidebar" title={collapsed ? "Click to expand" : undefined} onClick={() => { if (collapsed) setCollapsedRaw("0"); }} className={cn(collapsed && "cursor-pointer", "glass sticky top-3 m-3 hidden h-[calc(100vh-1.5rem)] shrink-0 overflow-hidden rounded-2xl transition-[width] duration-200 lg:flex lg:flex-col", collapsed ? "w-[4.5rem]" : "w-60")}>
         <div className={cn("flex items-center", collapsed ? "flex-col gap-2 px-2 py-4" : "justify-between px-5 py-5")}>
           <Link href="/dashboard" aria-label="SmartFin AI home" className="text-brand">{collapsed ? <LogoMark size={30} /> : <Logo />}</Link>
           <button type="button" onClick={() => setCollapsedRaw(collapsed ? "0" : "1")} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-pressed={collapsed} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             className="grid h-8 w-8 place-items-center rounded-lg text-muted transition hover:bg-surface2/70 hover:text-brand">{collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}</button>
         </div>
-        {renderTop(collapsed)}
-        {renderNav(collapsed)}
-        {renderTail(collapsed)}
+        {/* Only this middle part scrolls; Log out below it is a fixed footer, so the menu can never slide under it. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+          {renderTop(collapsed)}
+          {renderNav(collapsed)}
+          {renderTail(collapsed)}
+        </div>
         {renderLogout(collapsed)}
       </aside>
       {open && <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal aria-label="Menu">
         <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-        <div className="pop absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col overflow-y-auto overscroll-contain rounded-r-2xl"><div className="flex items-center justify-between px-6 py-4"><Link href="/dashboard" onClick={() => setOpen(false)} className="text-brand"><Logo /></Link><button aria-label="Close menu" onClick={() => setOpen(false)} className="-mr-3 grid h-11 w-11 place-items-center rounded-lg hover:bg-surface2/60"><X size={18} /></button></div>{renderTop(false)}{renderNav(false)}{renderTail(false)}{renderLogout(false)}</div>
+        <div className="pop absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col overflow-hidden rounded-r-2xl"><div className="flex shrink-0 items-center justify-between px-6 py-4"><Link href="/dashboard" onClick={() => setOpen(false)} className="text-brand"><Logo /></Link><button aria-label="Close menu" onClick={() => setOpen(false)} className="-mr-3 grid h-11 w-11 place-items-center rounded-lg hover:bg-surface2/60"><X size={18} /></button></div><div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{renderTop(false)}{renderNav(false)}{renderTail(false)}</div>{renderLogout(false)}</div>
       </div>}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="glass sticky top-3 z-30 mx-3 mt-3 grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl px-3 sm:gap-3 sm:px-4 lg:mr-4 2xl:grid-cols-[1fr_minmax(0,26rem)_1fr]">
