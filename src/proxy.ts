@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
     url.searchParams.set("code", code); const n = request.nextUrl.searchParams.get("next"); if (n) url.searchParams.set("next", n);
     return NextResponse.redirect(url);
   }
-  if (!user && !isPublic(path) && !path.startsWith("/api/health")) {
+  if (!user && !isPublic(path) && !path.startsWith("/api/health") && !path.startsWith("/api/webhooks/")) { // webhooks have no login; each one verifies its own signature
     if (path.startsWith("/api/")) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const url = request.nextUrl.clone(); url.pathname = "/login"; url.searchParams.set("next", path);
     return NextResponse.redirect(url);

@@ -4,7 +4,9 @@ import { formatMoney } from "@/lib/finance/money";
 import { formatYmd } from "@/lib/finance/dates";
 import { loanStatus, schedule } from "@/lib/finance/loans";
 import { ActionForm } from "./action-form";
+import { razorpayConfigured } from "@/lib/integrations/razorpay";
 import { ConfirmAction } from "./confirm-action";
+import { PayEmiButton } from "./pay-emi-button";
 import { LOAN_KINDS, LoanForm, type LoanRow } from "./loan-form";
 import { Badge, Card, EmptyState, cn } from "./ui";
 
@@ -39,6 +41,7 @@ export function LoansSection({ loans, payments, currency, today }: { loans: Loan
               <div className="min-w-0"><h3 className="flex flex-wrap items-center gap-2 text-lg font-semibold">{l.name}<Badge>{LOAN_KINDS[l.kind] ?? l.kind}</Badge>{st.closed && <Badge tone="good">cleared</Badge>}{st.overdue > 0 && !st.closed && <Badge tone="bad">{st.overdue} overdue</Badge>}</h3>
                 <p className="text-sm text-muted">{l.lender ? `${l.lender} · ` : ""}{Number(l.interest_rate_pct)}% a year · {m(Number(l.principal_minor))} over {l.tenure_months} months · EMI {m(Number(l.emi_minor))}</p></div>
               <div className="flex flex-wrap items-center gap-2">
+                {!st.closed && st.next && razorpayConfigured() && <PayEmiButton loanId={l.id} />}
                 {!st.closed && st.next && <ConfirmAction action={markEmiPaid} fields={{ id: l.id }} variant="outline" danger={false} confirmLabel="Yes, record it" confirm={`Record EMI ${st.next.no} of ${st.installments} (${m(st.next.emiMinor)}) for “${l.name}” as paid today? It is added to your transactions.`} success={`EMI recorded for ${l.name}.`}>Mark EMI paid</ConfirmAction>}
                 {paid > 0 && <ConfirmAction action={undoLastEmi} fields={{ id: l.id }} variant="ghost" danger={false} confirmLabel="Yes, undo" confirm={`Undo instalment ${paid}? Its transaction is removed too.`} success="Last EMI undone.">Undo last</ConfirmAction>}
                 <ActionForm action={deleteLoan} compact submit="Delete" variant="danger" confirm={`Delete “${l.name}” and its schedule? Payments already recorded stay in your transactions.`}><input type="hidden" name="id" value={l.id} /></ActionForm>
