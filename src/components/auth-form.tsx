@@ -91,7 +91,9 @@ export function AuthForm({ mode, action, next }: { mode: Mode; action: (s: FormS
         if (mode === "register" && RECAPTCHA_SITE_KEY && !String(new FormData(e.currentTarget).get("g-recaptcha-response") ?? "")) { setCaptchaErr("Please tick “I'm not a robot”."); setTouched(Object.fromEntries(Object.keys(errors).map((k) => [k, true]))); e.preventDefault(); return; }
         setCaptchaErr(undefined);
         if (Object.keys(errors).length) { e.preventDefault(); setTouched(Object.fromEntries(Object.keys(errors).map((k) => [k, true]))); (e.currentTarget.querySelector("[aria-invalid=true]") as HTMLElement | null)?.focus(); } }}>
-      <div className={full}><h1 className="text-2xl font-semibold tracking-tight">{title}</h1><p className="mt-0.5 text-sm text-muted">{SUB[mode]}</p></div>
+      <div className={cn(full, "text-center")}>
+        <h1 className="text-xl font-extrabold uppercase tracking-wide text-brand min-[400px]:text-2xl min-[400px]:tracking-wider">{title}</h1>
+        <p className="mt-2 text-sm text-muted">{SUB[mode]}</p></div>
       {state?.error && <div className={full}><ErrorNote>{state.error}</ErrorNote></div>}
       {state?.ok && <p role="status" className={cn("rounded-lg border border-good/40 bg-good/10 px-3 py-2 text-sm text-good", full)}>{state.ok}</p>}
       {mode === "register" && <>
