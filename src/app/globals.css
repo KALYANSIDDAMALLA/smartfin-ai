@@ -133,7 +133,7 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 @media (prefers-reduced-motion: reduce) { .ping-soft, .btn-shine::after { animation: none; transition: none; } .icon-btn:hover, .glow:hover, .avatar-ring:hover { transform: none; } }
 
 /* ---- Landing page backdrop: a full-page picture in place of the pale glass backdrop (home page only; light and dark versions) ---- */
-.home-art { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: #e3e7f6 url(/home-bg.svg) center / cover no-repeat; }
+.home-art { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: #e3e7f6 url(/home-bg.svg) center bottom / cover no-repeat; }
 .dark .home-art { background-color: #05060f; background-image: url(/home-bg-dark.svg); }
 
 /* ---- Touch devices: comfortable tap targets without changing the desktop look ---- */
