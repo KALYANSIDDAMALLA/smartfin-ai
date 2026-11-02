@@ -74,7 +74,7 @@ export default async function Home() {
 
       <main>
         <section aria-labelledby="hero-h" className="mx-3 mt-4 sm:mx-auto sm:max-w-6xl">
-          <div className="relative isolate overflow-hidden rounded-3xl bg-[linear-gradient(135deg,#1e1b4b,#3730a3_55%,#4f46e5)] px-5 py-10 text-white shadow-2xl shadow-indigo-900/25 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
+          <div className="relative isolate overflow-hidden rounded-3xl border border-white/25 bg-[linear-gradient(135deg,rgba(30,27,75,.74),rgba(55,48,163,.62)_55%,rgba(79,70,229,.52))] px-5 py-10 text-white shadow-2xl shadow-[inset_0_1px_0_rgba(255,255,255,.3)] backdrop-blur-xl backdrop-saturate-150 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
             <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 -z-10 h-96 w-96 rounded-full bg-white/10" />
             <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-20 -z-10 h-[26rem] w-[26rem] rounded-full bg-black/15" />
             <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
