@@ -86,6 +86,19 @@ export function AppShell({ children, name, unread, avatarUrl, searchCtx, timezon
   // Same 10px rhythm as between the module groups: Dashboard on top; Analytics, Bank account links, Calendar and Settings stacked after the last module.
   const renderTop = (compact: boolean) => <div className="px-3 pt-3">{pinnedLink(DASHBOARD_ITEM, compact)}</div>;
   const renderTail = (compact: boolean) => <div className="grid gap-2.5 px-3 pb-3 pt-1.5">{pinnedLink(ANALYTICS_ITEM, compact)}{pinnedLink(INTEGRATIONS_ITEM, compact)}{pinnedLink(CALENDAR_ITEM, compact)}{pinnedLink(SETTINGS_ITEM, compact)}</div>;
+  // Log out, pinned to the bottom of the sidebar (and the phone drawer) in red. Same "are you sure?" step as the account menu.
+  const confirmLogout = () => {
+    void askConfirm({ title: "Log out?", message: "Are you sure you want to log out?", confirmLabel: "Yes, log out", cancelLabel: "Stay logged in", tone: "danger" }).then((ok) => {
+      if (!ok) return; const f = document.createElement("form"); f.method = "post"; f.action = "/auth/signout"; document.body.appendChild(f); f.submit();
+    });
+  };
+  const renderLogout = (compact: boolean) => (
+    <div className="sticky bottom-0 mt-auto bg-gradient-to-t from-surface/80 via-surface/40 to-transparent px-3 pb-3 pt-4">
+      <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(false); confirmLogout(); }} aria-label="Log out" title={compact ? "Log out" : undefined}
+        className={cn("flex min-h-[38px] w-full items-center rounded-xl border border-bad/50 bg-bad/10 text-xs font-semibold uppercase tracking-wide text-bad shadow-sm transition hover:bg-bad hover:text-white focus-visible:outline-2 focus-visible:outline-bad", compact ? "justify-center py-2" : "gap-2.5 px-3 py-2")}>
+        <LogOut size={compact ? 18 : 15} aria-hidden />{!compact && <span className="flex-1 text-left">Log out</span>}</button>
+    </div>
+  );
   return (
     <div className="flex min-h-screen">
       <aside aria-label="Sidebar" title={collapsed ? "Click to expand" : undefined} onClick={() => { if (collapsed) setCollapsedRaw("0"); }} className={cn(collapsed && "cursor-pointer", "glass sticky top-3 m-3 hidden h-[calc(100vh-1.5rem)] shrink-0 overflow-y-auto overflow-x-hidden rounded-2xl transition-[width] duration-200 lg:flex lg:flex-col", collapsed ? "w-[4.5rem]" : "w-60")}>
@@ -97,10 +110,11 @@ export function AppShell({ children, name, unread, avatarUrl, searchCtx, timezon
         {renderTop(collapsed)}
         {renderNav(collapsed)}
         {renderTail(collapsed)}
+        {renderLogout(collapsed)}
       </aside>
       {open && <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal aria-label="Menu">
         <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-        <div className="pop absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col overflow-y-auto overscroll-contain rounded-r-2xl"><div className="flex items-center justify-between px-6 py-4"><Link href="/dashboard" onClick={() => setOpen(false)} className="text-brand"><Logo /></Link><button aria-label="Close menu" onClick={() => setOpen(false)} className="-mr-3 grid h-11 w-11 place-items-center rounded-lg hover:bg-surface2/60"><X size={18} /></button></div>{renderTop(false)}{renderNav(false)}{renderTail(false)}</div>
+        <div className="pop absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col overflow-y-auto overscroll-contain rounded-r-2xl"><div className="flex items-center justify-between px-6 py-4"><Link href="/dashboard" onClick={() => setOpen(false)} className="text-brand"><Logo /></Link><button aria-label="Close menu" onClick={() => setOpen(false)} className="-mr-3 grid h-11 w-11 place-items-center rounded-lg hover:bg-surface2/60"><X size={18} /></button></div>{renderTop(false)}{renderNav(false)}{renderTail(false)}{renderLogout(false)}</div>
       </div>}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="glass sticky top-3 z-30 mx-3 mt-3 grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl px-3 sm:gap-3 sm:px-4 lg:mr-4 2xl:grid-cols-[1fr_minmax(0,26rem)_1fr]">
