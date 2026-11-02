@@ -68,7 +68,7 @@ export default async function Home() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" aria-label="SmartFin AI home" className="text-brand"><Logo /></Link>
           <nav aria-label="Primary" className="hidden items-center gap-3 text-sm text-muted md:flex lg:gap-6"><a href="#showcase" className="hover:text-fg">See it</a><a href="#features" className="hover:text-fg">Features</a><a href="#how" className="hover:text-fg">How it works</a><a href="#ai" className="hover:text-fg">AI</a><a href="#faq" className="hover:text-fg">FAQ</a><Link href="/contact" className="whitespace-nowrap hover:text-fg">Contact us</Link></nav>
-          <div className="flex items-center gap-2 text-sm"><ThemeToggle /><Link href="/login" className="btn-shine rounded-xl border border-brand/45 bg-brand/10 px-4 py-2 font-semibold text-brand shadow-sm transition hover:border-brand hover:bg-brand/20">Log in</Link><Link href="/register" className="btn-shine glow rounded-xl bg-linear-to-b from-brand to-brand/85 px-4 py-2 font-semibold text-brandfg shadow-lg shadow-brand/40 ring-1 ring-white/30 transition hover:brightness-110">Sign up</Link></div>
+          <div className="flex items-center gap-2 text-sm"><span className="mr-2 sm:mr-5"><ThemeToggle /></span><Link href="/login" className="btn-shine rounded-xl border border-brand/45 bg-brand/10 px-4 py-2 font-semibold text-brand shadow-sm transition hover:border-brand hover:bg-brand/20">Log in</Link><Link href="/register" className="btn-shine glow rounded-xl bg-linear-to-b from-brand to-brand/85 px-4 py-2 font-semibold text-brandfg shadow-lg shadow-brand/40 ring-1 ring-white/30 transition hover:brightness-110">Sign up</Link></div>
         </div>
       </header>
 
