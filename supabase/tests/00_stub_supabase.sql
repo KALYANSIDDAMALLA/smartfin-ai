@@ -14,6 +14,7 @@ create table if not exists storage.objects (id uuid primary key default gen_rand
 create or replace function storage.foldername(name text) returns text[] language sql as $$ select string_to_array(name,'/') $$;
 alter table storage.objects enable row level security;
 grant usage on schema auth, storage, public to anon, authenticated, service_role;
+grant select, insert, delete on storage.objects to authenticated;
 
 -- mimic Supabase default privileges so migration REVOKEs are meaningful
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;

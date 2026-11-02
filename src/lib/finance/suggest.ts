@@ -1,0 +1,92 @@
+import { normalizeText } from "../imports/dedupe";
+
+export interface PastTx { merchant?: string | null; name?: string | null; categoryId?: string | null; paymentMethodId?: string | null; channel?: "online" | "offline" | null }
+export interface Suggestion {
+  categoryId?: string; paymentMethodId?: string; channel?: "online" | "offline";
+  confidence: number; source: "history" | "rules" | "ai"; reason: string;
+}
+
+const key = (t: PastTx) => normalizeText(t.merchant || t.name);
+const tally = (xs: (string | null | undefined)[]) => { const m = new Map<string, number>(); xs.forEach((x) => x && m.set(x, (m.get(x) ?? 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); };
+
+/** Learns from the user's own past transactions: same/similar merchant → its usual category, method and channel. */
+export function suggestFromHistory(history: PastTx[], text: string): Suggestion | null {
+  const t = normalizeText(text); if (t.length < 3) return null;
+  const hits = history.filter((h) => { const k = key(h); return k.length >= 3 && (k === t || k.includes(t) || t.includes(k)); });
+  if (!hits.length) return null;
+  const cats = tally(hits.map((h) => h.categoryId)); const meths = tally(hits.map((h) => h.paymentMethodId)); const chans = tally(hits.map((h) => h.channel));
+  const n = hits.length; const sizeFactor = n >= 3 ? 0.97 : n === 2 ? 0.85 : 0.7;
+  const out: Suggestion = { confidence: 0, source: "history", reason: `based on ${n} similar past ${n === 1 ? "entry" : "entries"}` };
+  let conf = 0;
+  if (cats[0]) { out.categoryId = cats[0][0]; conf = (cats[0][1] / hits.filter((h) => h.categoryId).length) * sizeFactor; }
+  // Only suggest a method/channel when it is clearly the habit (>= 2/3 of the entries that have one).
+  if (meths[0] && meths[0][1] / meths.reduce((a, b) => a + b[1], 0) >= 2 / 3) out.paymentMethodId = meths[0][0];
+  if (chans[0] && chans[0][1] / chans.reduce((a, b) => a + b[1], 0) >= 2 / 3) out.channel = chans[0][0] as "online" | "offline";
+  if (!out.categoryId && !out.paymentMethodId && !out.channel) return null;
+  out.confidence = Math.round((out.categoryId ? conf : 0.6) * 100) / 100; return out;
+}
+
+/** Well-known Indian merchants/words → category NAME (resolved against the user's own categories). */
+const RULES: { cat: string; kind: "expense" | "income"; words: string[]; strong?: boolean }[] = [
+  { cat: "Food and groceries", kind: "expense", strong: true, words: ["swiggy", "zomato", "bigbasket", "blinkit", "zepto", "instamart", "dmart", "dominos", "pizza hut", "mcdonald", "kfc", "burger king", "starbucks", "cafe coffee day", "restaurant", "grocery", "supermarket", "bakery", "hotel"] },
+  { cat: "Transportation", kind: "expense", strong: true, words: ["uber", "ola cabs", "ola ", "rapido", "namma metro", "metro rail", "fastag", "petrol", "diesel", "fuel", "hpcl", "bpcl", "indian oil", "iocl", "shell"] },
+  { cat: "Travel", kind: "expense", strong: true, words: ["irctc", "makemytrip", "goibibo", "cleartrip", "indigo", "air india", "vistara", "redbus", "oyo", "airbnb", "yatra", "ixigo"] },
+  { cat: "Shopping", kind: "expense", strong: true, words: ["amazon", "flipkart", "myntra", "ajio", "nykaa", "meesho", "tata cliq", "reliance digital", "croma", "decathlon", "lifestyle", "pantaloons"] },
+  { cat: "Subscriptions", kind: "expense", strong: true, words: ["netflix", "spotify", "hotstar", "prime video", "youtube premium", "sonyliv", "zee5", "apple music", "icloud", "google one", "subscription", "linkedin premium"] },
+  { cat: "Entertainment", kind: "expense", words: ["bookmyshow", "pvr", "inox", "cinema", "movie", "gaming", "steam", "concert"] },
+  { cat: "Utilities", kind: "expense", words: ["electricity", "bescom", "tneb", "mseb", "tata power", "adani electricity", "airtel", "jio", "vodafone", "vi recharge", "bsnl", "broadband", "act fibernet", "water bill", "gas bill", "piped gas", "recharge", "dth", "tata play"] },
+  { cat: "Healthcare", kind: "expense", words: ["apollo", "pharmacy", "medplus", "pharmeasy", "1mg", "practo", "hospital", "clinic", "diagnostic", "lab test", "dental", "doctor"] },
+  { cat: "Education", kind: "expense", words: ["udemy", "coursera", "byju", "unacademy", "school fee", "college", "tuition", "exam fee", "university", "upgrad"] },
+  { cat: "Rent", kind: "expense", words: ["rent", "landlord", "house rent", "pg rent"] },
+  { cat: "Insurance", kind: "expense", words: ["lic ", "insurance", "policybazaar", "hdfc life", "icici prudential", "star health", "premium paid"] },
+  { cat: "Loan payments", kind: "expense", words: ["emi", "loan", "bajaj finserv", "credit card bill"] },
+  { cat: "Salary", kind: "income", words: ["salary", "payroll", "wages"] },
+  { cat: "Freelance", kind: "income", words: ["freelance", "consulting", "invoice payment"] },
+  { cat: "Interest", kind: "income", words: ["interest credit", "interest", "fd maturity"] },
+  { cat: "Investment", kind: "income", words: ["dividend", "mutual fund redemption", "stock sale", "zerodha", "groww"] },
+  { cat: "Rental", kind: "income", words: ["rent received", "tenant"] },
+];
+
+/** Deterministic keyword rules. Longest matching word wins; resolves to the user's own category by name. */
+/** Everyday words (not just brand names) so plain-English notes like "lunch" or "cab" get a category. */
+const EVERYDAY: [string, "expense" | "income", string[]][] = [
+  ["Food and groceries", "expense", ["lunch", "dinner", "breakfast", "snack", "snacks", "tea", "coffee", "chai", "groceries", "vegetables", "fruits", "milk", "biryani", "juice", "food", "meal", "bakery", "canteen", "mess"]],
+  ["Transportation", "expense", ["cab", "taxi", "auto", "bus", "metro", "parking", "toll", "bike", "commute"]],
+  ["Travel", "expense", ["flight", "train", "hotel", "trip", "tickets", "ticket"]],
+  ["Shopping", "expense", ["clothes", "shirt", "shoes", "dress", "jeans", "bag", "gadget", "headphones", "purchase"]],
+  ["Healthcare", "expense", ["medicine", "medicines", "medical", "checkup", "consultation", "tablet"]],
+  ["Personal", "expense", ["salon", "haircut", "spa", "gym", "grooming"]],
+  ["Education", "expense", ["books", "course", "fees", "stationery", "classes"]],
+  ["Utilities", "expense", ["wifi", "mobile bill", "internet", "dth", "cylinder", "maintenance"]],
+  ["Entertainment", "expense", ["party", "outing", "games", "netflix night"]],
+  ["Business", "income", ["sales", "sale", "customer", "client payment", "wholesale", "order payment"]],
+  ["Interest", "income", ["interest"]], ["Investment", "income", ["dividend", "mutual fund", "stocks"]], ["Gift", "income", ["gift", "birthday money", "allowance"]],
+];
+for (const [cat, kind, words] of EVERYDAY) { const r = RULES.find((x) => x.cat === cat && x.kind === kind); if (r) r.words.push(...words); else RULES.push({ cat, kind, words: [...words] }); }
+
+export function suggestFromRules(text: string, categories: { id: string; name: string; kind: string }[], kind: "expense" | "income"): Suggestion | null {
+  const t = ` ${normalizeText(text)} `; if (t.trim().length < 3) return null;
+  let best: { rule: (typeof RULES)[number]; word: string } | null = null;
+  for (const rule of RULES) if (rule.kind === kind) for (const w of rule.words) { const nw = normalizeText(w); if (nw && t.includes(` ${nw}`) && (!best || nw.length > best.word.length)) best = { rule, word: nw }; }
+  if (!best) return null;
+  const cat = categories.find((c) => c.kind === kind && c.name.toLowerCase() === best!.rule.cat.toLowerCase()); if (!cat) return null;
+  return { categoryId: cat.id, confidence: best.rule.strong ? 0.88 : 0.78, source: "rules", reason: `“${best.word.trim()}” usually means ${cat.name}` };
+}
+
+/** Payment method mentioned in the text itself (e.g. "swiggy upi", "cash at shop"). */
+export function methodFromText(text: string, methods: { id: string; code: string }[]): string | undefined {
+  const t = normalizeText(text); const has = (re: RegExp) => re.test(t);
+  const code = has(/\bphonepe\b/) ? "phonepe" : has(/\bgpay\b|google pay/) ? "gpay" : has(/\bpaytm\b/) ? "paytm" : has(/\bupi\b/) ? "upi" : has(/\bcredit card\b/) ? "credit_card" : has(/\bdebit card\b/) ? "debit_card" : has(/\bcash\b/) ? "cash" : has(/\bnetbanking\b|net banking/) ? "net_banking" : undefined;
+  return code ? methods.find((m) => m.code === code)?.id : undefined;
+}
+
+const BUSINESS_WORDS = /\b(pvt|ltd|llp|inc|corp|store|stores|mart|traders|trading|enterprises?|hotel|cafe|restaurant|bakery|pharmacy|medical|clinic|hospital|school|college|university|bank|services?|solutions|shop|supermarket|mall|fuel|petrol|gas|electric(?:ity)?|telecom|recharge|insurance|finance|payments?|wallet|travels?|airlines?|motors|agency|institute|academy|foods?|kitchen|sweets|mess|canteen|salon|spa|gym|studio|labs?|tech|technologies|systems|retail|wholesale|distributors?|marketplace|\.com|\.in)\b|@|\d/i;
+/** True for a name that reads like an individual ("Edunuri Varshitha", "Ravi Kumar"), not a business or brand. */
+export function looksLikePerson(name?: string | null): boolean {
+  const n = (name ?? "").trim(); if (!n || n.length > 40 || BUSINESS_WORDS.test(n)) return false;
+  const words = n.split(/\s+/); return words.length >= 1 && words.length <= 4 && words.every((w) => /^[A-Za-z][A-Za-z.'-]*$/.test(w));
+}
+/** The catch-all "Other" category for a payment to an individual when nothing says what it was for (never overrides a real match). */
+export function personFallback(categories: { id: string; name: string; kind: string }[], kind: "expense" | "income", merchant?: string | null): { categoryId: string; reason: string } | null {
+  if (!looksLikePerson(merchant)) return null; const c = categories.find((x) => x.kind === kind && x.name.toLowerCase() === "other"); return c ? { categoryId: c.id, reason: `Payment to an individual (${merchant}) — set to “Other”; change it if it was for something specific.` } : null;
+}

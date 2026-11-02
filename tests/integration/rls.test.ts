@@ -1,4 +1,4 @@
-// Requires TEST_DATABASE_URL pointing at a DB with migrations applied (see docs/TESTING.md).
+// Requires TEST_DATABASE_URL pointing at a DB with migrations applied (see docs/SETUP.md).
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Client } from "pg";
 
@@ -96,6 +96,15 @@ d("RLS: users cannot access each other's financial data", () => {
     const r = await as(B, (c) => c.query("select id from profiles"));
     expect(r.rows.map((x) => x.id)).toEqual([B]);
   });
+  it("drafts: private to their owner, cannot use another user's category, never counted as transactions", async () => {
+    const id = (await as(A, (c) => c.query("insert into transaction_drafts(user_id,type,name,planned_for) values ($1,'expense','Plan: stock','2026-11-20') returning id", [A]))).rows[0].id;
+    expect((await as(B, (c) => c.query("select id from transaction_drafts"))).rows).toHaveLength(0);
+    expect((await as(B, (c) => c.query("update transaction_drafts set name='x' where id=$1", [id]))).rowCount).toBe(0);
+    expect((await as(B, (c) => c.query("delete from transaction_drafts where id=$1", [id]))).rowCount).toBe(0);
+    expect(await tryQ(B, "insert into transaction_drafts(user_id,name) values ($1,'forged')", [A])).toBeInstanceOf(Error); // cannot create rows for someone else
+    expect(await tryQ(A, "insert into transaction_drafts(user_id,category_id) values ($1,$2)", [A, bCat])).toBeInstanceOf(Error); // composite FK blocks foreign category
+    expect((await as(A, (c) => c.query("select count(*)::int n from transactions where name='Plan: stock'"))).rows[0].n).toBe(0);
+  });
   it("integration secrets are inaccessible to clients", async () => {
     expect(await tryQ(A, "select * from integration_secrets")).toBeInstanceOf(Error);
   });
@@ -126,6 +135,12 @@ d("RLS: users cannot access each other's financial data", () => {
     expect(await tryQ(B, "insert into storage.objects(bucket_id,name) values ('private-files',$1)", [`${B}/x.pdf`])).not.toBeInstanceOf(Error);
     const seen = await as(A, (c) => c.query("select name from storage.objects where bucket_id='private-files'"));
     expect(seen.rows.every((r) => r.name.startsWith(A))).toBe(true);
+  });
+  it("delete_my_account removes only the caller; anonymous callers are denied", async () => {
+    const bad = await tryQ("00000000-0000-0000-0000-000000000000", "select delete_my_account('x')");
+    expect((await admin.query("select 1 from auth.users where id=$1", [B])).rowCount).toBe(1);
+    expect(bad).not.toBeInstanceOf(Error); // unknown uid: nothing to delete, but nobody else is touched
+    expect((await admin.query("select 1 from auth.users where id=$1", [A])).rowCount).toBe(1);
   });
   it("deleting a user cascades all their data", async () => {
     const tmp = (await admin.query("insert into auth.users(email) values ('tmp@t.dev') returning id")).rows[0].id;
