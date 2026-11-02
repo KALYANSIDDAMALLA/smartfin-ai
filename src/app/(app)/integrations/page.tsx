@@ -8,6 +8,7 @@ import { archiveAccount } from "@/app/actions/accounts";
 import { disconnectBank, refreshConnection, syncConnection } from "@/app/actions/integrations";
 import { ActionForm } from "@/components/action-form";
 import { AddAccountForm, BankLinkForm } from "@/components/bank-forms";
+import { AccountBalance } from "@/components/account-balance";
 import { CheckBalance } from "@/components/check-balance";
 import { SummaryLine } from "@/components/summary-line";
 import { Badge, Card, PageHeader } from "@/components/ui";
@@ -66,6 +67,7 @@ export default async function BankLinks() {
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white" style={{ background: `hsl(${bankHue(a.name)} 60% 45%)` }}><Landmark size={16} aria-hidden /></span>
               <div className="min-w-0"><p className="truncate text-sm font-medium">{a.name}</p><p className="text-xs text-muted">{a.kind === "bank" ? "Bank account" : a.kind === "credit_card" ? ACCOUNT_TYPES.credit_card : a.kind === "wallet" ? ACCOUNT_TYPES.wallet : a.kind === "cash" ? ACCOUNT_TYPES.cash : "Other"}{Number(a.opening_balance_minor) ? ` · opening ${m(Number(a.opening_balance_minor))}` : ""}</p></div></div>
               <ActionForm action={archiveAccount} compact submit="Remove" variant="ghost" confirm={`Remove “${a.name}” from your list? Past transfers stay.`}><input type="hidden" name="id" value={a.id} /></ActionForm></div>
+              <AccountBalance accountId={a.id} currency={profile.currency} timezone={profile.timezone} />
             </li>))}</ul>}
           <h3 className="mb-2 text-sm font-semibold">Add an account</h3><AddAccountForm />
         </Card>
