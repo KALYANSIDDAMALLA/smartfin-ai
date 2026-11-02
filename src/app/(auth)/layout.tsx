@@ -16,7 +16,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="grid min-h-dvh lg:h-dvh lg:grid-cols-[1fr_1.1fr]">
       {/* Same full-page picture as the home page (light and dark versions); the indigo panel on the left covers its left half. */}
       <div aria-hidden className="home-art" />
-      <aside className="relative hidden overflow-hidden bg-[linear-gradient(135deg,#1e1b4b,#3730a3_55%,#4f46e5)] text-white lg:flex lg:flex-col lg:justify-between lg:p-10">
+      <aside className="glass-indigo relative hidden overflow-hidden text-white lg:flex lg:flex-col lg:justify-between lg:p-10">
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10" />
         <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-black/10" />
         <Link href="/" aria-label="SmartFin AI home" className="relative"><Logo size={34} textClassName="text-xl" /></Link>

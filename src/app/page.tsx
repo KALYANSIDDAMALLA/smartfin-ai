@@ -175,7 +175,7 @@ export default async function Home() {
         </section>
 
         <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-          <div className="rounded-3xl bg-[linear-gradient(135deg,#1e1b4b,#3730a3_55%,#4f46e5)] px-6 py-12 text-center text-white shadow-xl shadow-indigo-900/20">
+          <div className="glass-indigo rounded-3xl border border-white/25 px-6 py-12 text-center text-white">
             <h2 className="text-3xl font-semibold tracking-tight">Start with a clearer view of your money</h2>
             <p className="mx-auto mt-2 max-w-xl opacity-90">Create your account in under a minute. Verify your email and you&apos;re in.</p>
             <Link href="/register" className="mt-6 inline-flex h-11 items-center gap-2 rounded-lg bg-white px-6 text-sm font-medium text-indigo-900 transition hover:bg-indigo-50">Create free account <ArrowRight size={16} aria-hidden /></Link>
