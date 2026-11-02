@@ -20,6 +20,12 @@ const keyPrefix = () => (razorpayIsLive() ? "rzp_live_" : "rzp_test_");
 /** " (test)" in test mode, "" in live mode: appended to button and message text so real payments never say "test". */
 export const testTag = () => (razorpayIsLive() ? "" : " (test)");
 
+/** The public demo logins (priya.demo@smartfin.demo and friends) have a password that is published in the repo. */
+export const isDemoEmail = (email?: string | null) => (email ?? "").trim().toLowerCase().endsWith("@smartfin.demo");
+/** In LIVE mode the shared demo accounts must never take real payments. Returns the refusal message, or null when allowed (always allowed in test mode). */
+export const demoLiveBlock = (email?: string | null): string | null =>
+  razorpayIsLive() && isDemoEmail(email) ? "The shared demo account can't make real payments. Create your own account to use this." : null;
+
 export const razorpayKeys = () => ({ keyId: process.env.RAZORPAY_KEY_ID ?? "", keySecret: process.env.RAZORPAY_KEY_SECRET ?? "" });
 export const razorpayConfigured = () => { const k = razorpayKeys(); return k.keyId.startsWith(keyPrefix()) && !!k.keySecret; };
 export const razorpayxConfigured = () => razorpayConfigured() && !!process.env.RAZORPAYX_ACCOUNT_NUMBER;

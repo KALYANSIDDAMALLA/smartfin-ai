@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
-import { razorpayConfigured, razorpayIsLive, razorpayKeyMismatch, razorpayMode, razorpayxConfigured, testTag, verifyCheckoutSignature, verifyWebhookSignature } from "@/lib/integrations/razorpay";
+import { demoLiveBlock, isDemoEmail, razorpayConfigured, razorpayIsLive, razorpayKeyMismatch, razorpayMode, razorpayxConfigured, testTag, verifyCheckoutSignature, verifyWebhookSignature } from "@/lib/integrations/razorpay";
 
 const sign = (secret: string, data: string) => createHmac("sha256", secret).update(data).digest("hex");
 const ENV = ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAYX_ACCOUNT_NUMBER", "RAZORPAY_MODE", "VERCEL_ENV", "RAZORPAY_ALLOW_LIVE_LOCAL"] as const;
@@ -43,6 +43,17 @@ describe("Test-mode guard", () => {
     process.env.RAZORPAY_KEY_ID = "rzp_live_abc"; process.env.RAZORPAY_KEY_SECRET = "s"; process.env.RAZORPAYX_ACCOUNT_NUMBER = "1";
     expect(razorpayConfigured()).toBe(false); expect(razorpayxConfigured()).toBe(false); expect(razorpayKeyMismatch()).toBe(true);
   });
+});
+
+describe("Demo-account guard", () => {
+  const goLive = () => { process.env.RAZORPAY_MODE = "live"; process.env.VERCEL_ENV = "production"; };
+  it("recognises the shared demo logins, any case, and nothing else", () => {
+    for (const e of ["priya.demo@smartfin.demo", "ARJUN.DEMO@SMARTFIN.DEMO", " x@smartfin.demo "]) expect(isDemoEmail(e)).toBe(true);
+    for (const e of ["real@gmail.com", "me@smartfin.demo.evil.com", "demo@smartfin.ai", "", null, undefined]) expect(isDemoEmail(e)).toBe(false);
+  });
+  it("blocks demo users in LIVE mode with a clear message", () => { goLive(); expect(demoLiveBlock("priya.demo@smartfin.demo")).toMatch(/demo account can't make real payments/); });
+  it("never blocks real users in live mode", () => { goLive(); expect(demoLiveBlock("someone@gmail.com")).toBeNull(); expect(demoLiveBlock(undefined)).toBeNull(); });
+  it("does not block demo users in test mode (no real money there)", () => { expect(demoLiveBlock("priya.demo@smartfin.demo")).toBeNull(); });
 });
 
 describe("Live-mode switch (safe by default)", () => {

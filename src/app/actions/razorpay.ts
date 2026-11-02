@@ -7,7 +7,7 @@ import { rateLimit } from "@/lib/server/ratelimit";
 import { moneyField, nameField } from "@/lib/server/validation";
 import { schedule } from "@/lib/finance/loans";
 import { formatMoney } from "@/lib/finance/money";
-import { createContact, createFundAccountValidation, createOrder, createPayout, createUpiFundAccount, razorpayConfigured, razorpayIsLive, razorpayKeys, razorpayxConfigured, RazorpayError, testTag, validationState, verifyCheckoutSignature } from "@/lib/integrations/razorpay";
+import { createContact, createFundAccountValidation, createOrder, createPayout, createUpiFundAccount, demoLiveBlock, razorpayConfigured, razorpayIsLive, razorpayKeys, razorpayxConfigured, RazorpayError, testTag, validationState, verifyCheckoutSignature } from "@/lib/integrations/razorpay";
 import { UPI_RE, maskUpi } from "@/lib/upi";
 import { markEmiPaid } from "./loans";
 import type { FormState } from "./auth";
@@ -31,7 +31,8 @@ async function nextInstalment(a: NonNullable<Awaited<ReturnType<typeof getUserOr
 /** Step 1 of "Pay EMI with Razorpay": create an order for the next instalment and hand the browser what Checkout needs (public key id + order id only). */
 export async function createEmiOrder(loanId: string): Promise<{ orderId: string; keyId: string; amountMinor: number; title: string } | { error: string }> {
   const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
-  if (!razorpayConfigured()) return { error: "Razorpay test keys aren't configured on this server." };
+  const demo = demoLiveBlock(a.user.email); if (demo) return { error: demo };
+  if (!razorpayConfigured()) return { error: "Razorpay isn't configured on this server." };
   if (!rateLimit(`rzp:${a.user.id}`, 20, 60 * 60_000).ok) return { error: "Too many payment attempts. Try again in a while." };
   const n = await nextInstalment(a, String(loanId)); if (!n) return { error: "There is no EMI left to pay on this loan." };
   try {
@@ -65,7 +66,8 @@ const payoutSchema = z.object({
 /** RazorpayX test payout to a UPI ID. Creates the contact and fund account, then the payout with an idempotency key. */
 export async function sendTestPayout(_: FormState, fd: FormData): Promise<FormState> {
   const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
-  if (!razorpayxConfigured()) return { error: "RazorpayX test keys or account number aren't configured on this server." };
+  const demo = demoLiveBlock(a.user.email); if (demo) return { error: demo };
+  if (!razorpayxConfigured()) return { error: "RazorpayX keys or account number aren't configured on this server." };
   if (!rateLimit(`rzpx:${a.user.id}`, 10, 60 * 60_000).ok) return { error: "Too many payouts. Try again in a while." };
   const p = payoutSchema.safeParse(Object.fromEntries(fd)); if (!p.success) return { error: p.error.issues[0].message };
   const d = p.data; if (d.amount > 10_000_00) return { error: "Payouts are limited to ₹10,000 for now." };
@@ -95,7 +97,8 @@ async function ownAccount(a: Auth, id: string) {
 /** Verify with Razorpay: a ₹1 "penny drop" to the account's UPI id. Reports if it exists and the name the bank has on record. The UPI id itself is not stored. */
 export async function verifyAccountUpi(_: FormState, fd: FormData): Promise<FormState> {
   const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
-  if (!razorpayxConfigured()) return { error: "RazorpayX test keys or account number aren't configured on this server." };
+  const demo = demoLiveBlock(a.user.email); if (demo) return { error: demo };
+  if (!razorpayxConfigured()) return { error: "RazorpayX keys or account number aren't configured on this server." };
   if (!rateLimit(`rzpv:${a.user.id}`, 10, 60 * 60_000).ok) return { error: "Too many checks. Try again in a while." };
   const p = z.object({ accountId: z.string().uuid("Choose an account."), upi: z.string().trim().regex(UPI_RE, "Enter a valid UPI ID, like name@bank.") }).safeParse(Object.fromEntries(fd));
   if (!p.success) return { error: p.error.issues[0].message };
@@ -115,7 +118,8 @@ export async function verifyAccountUpi(_: FormState, fd: FormData): Promise<Form
 /** Add money, step 1: an order for the amount; Checkout takes the payment in the browser. */
 export async function createTopupOrder(accountId: string, amountMinor: number): Promise<{ orderId: string; keyId: string; amountMinor: number; title: string } | { error: string }> {
   const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
-  if (!razorpayConfigured()) return { error: "Razorpay test keys aren't configured on this server." };
+  const demo = demoLiveBlock(a.user.email); if (demo) return { error: demo };
+  if (!razorpayConfigured()) return { error: "Razorpay isn't configured on this server." };
   if (!rateLimit(`rzpt:${a.user.id}`, 20, 60 * 60_000).ok) return { error: "Too many attempts. Try again in a while." };
   if (!Number.isInteger(amountMinor) || amountMinor < 100 || amountMinor > 50_000_00) return { error: "Enter an amount from ₹1 to ₹50,000." };
   const acct = await z.string().uuid().safeParseAsync(accountId).then((r) => (r.success ? ownAccount(a, r.data) : null)); if (!acct) return { error: "That account wasn't found." };

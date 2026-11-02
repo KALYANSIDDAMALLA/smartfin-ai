@@ -10,7 +10,7 @@ import { ActionForm } from "@/components/action-form";
 import { AddAccountForm, BankLinkForm } from "@/components/bank-forms";
 import { CheckBalance } from "@/components/check-balance";
 import { AccountRazorpay, type PayoutRow, type Verification } from "@/components/account-razorpay";
-import { razorpayConfigured, razorpayIsLive, razorpayxConfigured } from "@/lib/integrations/razorpay";
+import { demoLiveBlock, razorpayConfigured, razorpayIsLive, razorpayxConfigured } from "@/lib/integrations/razorpay";
 import { SummaryLine } from "@/components/summary-line";
 import { Badge, Card, PageHeader } from "@/components/ui";
 
@@ -26,7 +26,7 @@ const STATUS: Record<string, { label: string; tone: "good" | "warn" | "neutral" 
 type Meta = { bank?: string; mobileLast4?: string; demo?: boolean; accounts?: { masked: string; type?: string }[] };
 
 export default async function BankLinks() {
-  const { supabase, profile } = await requireUser(); const live = setuConfigured(); const m = (v: number) => formatMoney(v, profile.currency);
+  const { supabase, profile, user } = await requireUser(); const live = setuConfigured(); const m = (v: number) => formatMoney(v, profile.currency);
   const [{ data: conns }, { data: accounts }, { data: consents }, { data: verifs }, { data: pays }] = await Promise.all([
     supabase.from("integration_connections").select("*").eq("provider", "account_aggregator").neq("status", "revoked").order("created_at", { ascending: false }),
     supabase.from("accounts").select("*").eq("archived", false).order("created_at"),
@@ -35,7 +35,8 @@ export default async function BankLinks() {
     supabase.from("account_verifications").select("account_id,status,registered_name,upi_masked,created_at").order("created_at", { ascending: false }).limit(100),
     supabase.from("razorpayx_payouts").select("id,account_id,payee_name,upi_masked,amount_minor,status,created_at").not("account_id", "is", null).order("created_at", { ascending: false }).limit(100),
   ]);
-  const checkoutReady = razorpayConfigured(); const payoutsReady = razorpayxConfigured();
+  const demoBlocked = !!demoLiveBlock(user.email); // live mode + shared demo login: no real payments
+  const checkoutReady = razorpayConfigured() && !demoBlocked; const payoutsReady = razorpayxConfigured() && !demoBlocked;
   const verifOf = (id: string): Verification | null => { const v = (verifs ?? []).find((x) => x.account_id === id); return v ? { status: v.status as Verification["status"], name: v.registered_name, upi: v.upi_masked } : null; };
   const payoutsOf = (id: string): PayoutRow[] => (pays ?? []).filter((p) => p.account_id === id).slice(0, 3).map((p) => ({ id: p.id, payee: p.payee_name, upi: p.upi_masked, amountLabel: m(Number(p.amount_minor)), status: p.status,
     when: new Date(p.created_at).toLocaleString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) }));
@@ -70,6 +71,7 @@ export default async function BankLinks() {
         <Card>
           <h2 className="mb-1 font-medium">Your accounts</h2>
           <p className="mb-4 text-sm text-muted">Add the accounts you use, even without linking, so you can pick them when you record a transfer between your own accounts.</p>
+          {demoBlocked && <p role="status" className="mb-4 rounded-lg border border-line bg-surface/60 px-3 py-2 text-xs text-muted">Real payments are turned off for the shared demo account. Create your own account to try Razorpay.</p>}
           {!!nAcc && <ul className="mb-5 grid gap-2 sm:grid-cols-2">{accounts!.map((a) => (
             <li key={a.id} className="rounded-xl border border-line bg-surface/60 px-3 py-2.5"><div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white" style={{ background: `hsl(${bankHue(a.name)} 60% 45%)` }}><Landmark size={16} aria-hidden /></span>

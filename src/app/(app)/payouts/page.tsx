@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/server/auth";
-import { razorpayIsLive, razorpayKeyMismatch, razorpayxConfigured } from "@/lib/integrations/razorpay";
+import { demoLiveBlock, razorpayIsLive, razorpayKeyMismatch, razorpayxConfigured } from "@/lib/integrations/razorpay";
 import { formatMoney } from "@/lib/finance/money";
 import { sendTestPayout } from "@/app/actions/razorpay";
 import { ActionForm } from "@/components/action-form";
@@ -9,14 +9,15 @@ import { Badge, Card, EmptyState, Field, Input, PageHeader } from "@/components/
 const TONE: Record<string, "good" | "warn" | "bad" | "neutral"> = { processed: "good", queued: "warn", pending: "warn", processing: "warn", failed: "bad", rejected: "bad", reversed: "bad", cancelled: "neutral" };
 
 export default async function Payouts() {
-  const { supabase, profile } = await requireUser(); const ready = razorpayxConfigured(); const live = razorpayIsLive();
+  const { supabase, profile, user } = await requireUser(); const demoBlocked = demoLiveBlock(user.email); const ready = razorpayxConfigured() && !demoBlocked; const live = razorpayIsLive();
   const { data: rows, error } = await supabase.from("razorpayx_payouts").select("*").order("created_at", { ascending: false }).limit(25);
   return (
     <>
       <PageHeader title={live ? "Send money (RazorpayX)" : "Send money (RazorpayX test)"} desc={live ? "UPI payouts through RazorpayX. This moves real money." : "Test-mode UPI payouts through RazorpayX. No real money moves."} />
       <div className="grid gap-6">
         {live && <div role="status" className="rounded-xl border border-bad/40 bg-bad/10 px-4 py-3 text-sm text-bad"><b>Live mode.</b> Payouts here move real money from your RazorpayX balance and cannot be undone.</div>}
-        {!ready && <div role="status" className="rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"><b>{razorpayKeyMismatch() ? `These Razorpay keys don't match ${live ? "live" : "test"} mode, so Razorpay is switched off.` : `RazorpayX ${live ? "live" : "test"} mode is not set up yet.`}</b>{" "}
+        {demoBlocked && <div role="status" className="rounded-xl border border-line bg-surface/60 px-4 py-3 text-sm text-muted">{demoBlocked}</div>}
+        {!ready && !demoBlocked && <div role="status" className="rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"><b>{razorpayKeyMismatch() ? `These Razorpay keys don't match ${live ? "live" : "test"} mode, so Razorpay is switched off.` : `RazorpayX ${live ? "live" : "test"} mode is not set up yet.`}</b>{" "}
           Add <code>RAZORPAY_KEY_ID</code> (must start with <code>{live ? "rzp_live_" : "rzp_test_"}</code>), <code>RAZORPAY_KEY_SECRET</code> and <code>RAZORPAYX_ACCOUNT_NUMBER</code> in the server settings and redeploy. See <code>docs/RAZORPAY.md</code>.</div>}
         {error && <div role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-4 py-3 text-sm text-bad">Payouts need a one-time database update (migration 20261101000009).</div>}
         <Card>
