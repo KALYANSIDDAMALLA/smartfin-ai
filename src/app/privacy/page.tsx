@@ -1,7 +1,7 @@
-import Link from "next/link";
+import { BackHome } from "@/components/back-home";
 export const metadata = { title: "Privacy policy · SmartFin AI" };
 export default function Privacy() {
-  return (<main className="mx-auto max-w-2xl px-4 py-10 text-sm leading-6"><Link href="/" className="text-brand">← SmartFin AI</Link>
+  return (<main className="mx-auto max-w-2xl px-4 py-10 text-sm leading-6"><BackHome />
     <h1 className="mt-4 text-2xl font-semibold">Privacy policy</h1><p className="mt-1 text-muted">Draft for launch review — have it reviewed by legal counsel before publishing.</p>
     <h2 className="mt-6 font-medium">What we store</h2><p>Your email, optional display name, preferences, and the financial records, files and goals you add or import. Files are kept in a private bucket.</p>
     <h2 className="mt-6 font-medium">How it is protected</h2><p>Every record is owned by your account and enforced by database row-level security. Uploaded files are accessible only to you.</p>
