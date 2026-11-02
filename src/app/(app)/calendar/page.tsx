@@ -32,8 +32,8 @@ function EventRow({ e, m }: { e: CalEvent; m: (v: number) => string }) {
       <span className="text-xs text-muted">{formatYmd(e.ymd)}</span>
       {e.overdue && <Badge tone="bad">{e.kind === "draft" ? "past date" : "overdue"}</Badge>}
       {closed.closed && <span title={`Banks are closed (${closed.reason}). Pay a day early.`}><Badge tone="warn">bank holiday</Badge></span>}
-      {e.kind === "recurring" && <Link href="/repayments" className="text-xs text-brand underline">Open</Link>}
-      {e.kind === "goal" && <Link href="/goals" className="text-xs text-brand underline">Open</Link>}
+      {e.kind === "recurring" && <Link href="/repayments" className="tap text-xs text-brand underline">Open</Link>}
+      {e.kind === "goal" && <Link href="/goals" className="tap text-xs text-brand underline">Open</Link>}
       {e.kind === "draft" && <><Link href={`${e.draftType === "income" ? "/income" : "/expenses/new"}?draft=${e.id}`} className="text-xs font-medium text-brand underline">Finish</Link>
         <ConfirmAction bare action={deleteDraft} fields={{ id: e.id ?? "" }} label={`Delete draft ${e.title}`} className="rounded p-1 text-muted hover:text-bad" confirm={`Delete the draft “${e.title}”?`} success="Draft deleted."><Trash2 size={14} /></ConfirmAction></>}
     </li>

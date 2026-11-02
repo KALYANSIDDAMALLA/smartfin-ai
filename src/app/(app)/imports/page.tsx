@@ -19,9 +19,9 @@ export default async function Imports() {
         <Card><ActionForm action={uploadImport} submit="Upload & preview"><Field label="File (max 10 MB)" hint="CSV, XLSX, PDF, PNG or JPG. Files are stored privately and only parsed — never executed."><input type="file" name="file" required accept=".csv,.xlsx,.pdf,.png,.jpg,.jpeg" className={inputCls + " py-1.5"} /></Field></ActionForm>
           <p className="mt-3 text-xs text-muted">PDF and receipt extraction is heuristic: expect to review every row. Receipt OCR requires an AI provider key.</p></Card>
         <Card><h2 className="mb-3 font-medium">Import history</h2>
-          {!data?.length ? <EmptyState title="No imports yet" /> : <Table><thead><tr><Th>File</Th><Th>Status</Th><Th>Uploaded</Th><Th><span className="sr-only">Actions</span></Th></tr></thead><tbody>
-            {data.map((b) => <tr key={b.id}><Td>{b.file_name}<span className="block text-xs text-muted">{b.file_kind} · {(b.size_bytes / 1024).toFixed(0)} KB{b.error && ` · ${b.error}`}</span></Td><Td><Badge tone={TONE[b.status as keyof typeof TONE]}>{b.status}</Badge></Td>
-              <Td className="text-muted">{new Date(b.created_at).toLocaleString("en-IN")}</Td>
+          {!data?.length ? <EmptyState title="No imports yet" /> : <Table><thead><tr><Th>File</Th><Th>Status</Th><Th className="hidden md:table-cell">Uploaded</Th><Th><span className="sr-only">Actions</span></Th></tr></thead><tbody>
+            {data.map((b) => <tr key={b.id}><Td>{b.file_name}<span className="block text-xs text-muted">{b.file_kind} · {(b.size_bytes / 1024).toFixed(0)} KB{b.error && ` · ${b.error}`}</span><span className="block text-xs text-muted md:hidden">{new Date(b.created_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</span></Td><Td><Badge tone={TONE[b.status as keyof typeof TONE]}>{b.status}</Badge></Td>
+              <Td className="hidden text-muted md:table-cell">{new Date(b.created_at).toLocaleString("en-IN")}</Td>
               <Td><div className="flex gap-2">{b.status === "preview" && <Link href={`/imports/${b.id}`} className="text-sm text-brand">Review</Link>}
                 {b.storage_path !== "removed" && <ActionForm action={cancelImport} compact submit="Remove file" variant="ghost" confirm={b.status === "confirmed" ? "Remove the stored file? Imported transactions are kept." : "Discard this import?"}><input type="hidden" name="id" value={b.id} /></ActionForm>}</div></Td></tr>)}
           </tbody></Table>}</Card>

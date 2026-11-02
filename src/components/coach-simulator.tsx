@@ -34,8 +34,8 @@ export function CoachSimulator({ base, goal, currency }: { base: CoachBase; goal
         <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 font-medium"><TrendingUp size={16} className="text-brand" aria-hidden />Try cutting back</h2>
           <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Quick presets">
             {PRESETS.map(([l, v]) => <button key={l} type="button" onClick={() => all(v)} className="rounded-full border border-line bg-surface/70 px-3 py-1 text-sm transition hover:border-brand/60 hover:bg-brand/10">{l} · {v}%</button>)}
-            <button type="button" onClick={() => setCuts(suggested())} className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm text-brand hover:bg-brand/10"><RotateCcw size={13} aria-hidden />Suggested</button>
-            <button type="button" onClick={() => all(0)} className="rounded-full px-3 py-1 text-sm text-muted hover:bg-surface2">Clear</button></div></div>
+            <button type="button" onClick={() => setCuts(suggested())} className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm text-brand hover:bg-brand/10 md:py-1"><RotateCcw size={13} aria-hidden />Suggested</button>
+            <button type="button" onClick={() => all(0)} className="rounded-full px-3 py-2 text-sm text-muted hover:bg-surface2 md:py-1">Clear</button></div></div>
         <p className="mt-1 text-xs text-muted">Based on your last 3 months. Rent, loans, salaries, stock and other essential costs ({m(base.fixedMonthlyMinor)} a month) are left out, since they are hard to cut.</p>
         {!base.opportunities.length ? <p className="mt-4 text-sm text-muted">No flexible category is big enough to trim yet. Keep adding transactions and check back soon.</p> : (
           <ul className="mt-4 grid gap-3">{base.opportunities.map((o) => { const cut = cuts[o.id] ?? 0; const saves = Math.round((o.monthlyMinor * cut) / 100 / 100) * 100; const budget = Math.ceil((o.monthlyMinor * (100 - cut)) / 100 / 10000) * 100; return (

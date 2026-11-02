@@ -19,9 +19,9 @@ export default async function Income({ searchParams }: { searchParams: Promise<S
       <div className="grid gap-6">
         <PasteTx lookups={lookups} mode="income" ai={aiStatus().configured} start={start} merchants={merchants} />
         <Card><div className="mb-3 flex flex-wrap items-baseline justify-between gap-2"><h2 className="font-medium">Income in this period</h2>{data?.length === 500 && <p className="text-sm text-warn">Showing the latest 500 — narrow the dates to see everything.</p>}{!!data?.length && data.length < 500 && <p className="text-sm text-muted">{data.length} entr{data.length === 1 ? "y" : "ies"} · total <b className="tabnum text-good">{formatMoney(data.reduce((a, r) => a + Number(r.amount_minor), 0), profile.currency)}</b></p>}</div>
-          {!data?.length ? <EmptyState title="No income in this period" hint="Pick another date range above, or add income." /> : <Table><thead><tr><Th>Date</Th><Th>Name</Th><Th>Category</Th><Th className="text-right">Amount</Th></tr></thead><tbody>
+          {!data?.length ? <EmptyState title="No income in this period" hint="Pick another date range above, or add income." /> : <Table><thead><tr><Th>Date</Th><Th>Name</Th><Th className="hidden md:table-cell">Category</Th><Th className="text-right">Amount</Th></tr></thead><tbody>
             {data.map((r) => <tr key={r.id}><Td className="whitespace-nowrap text-muted">{new Date(r.occurred_at).toLocaleDateString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", year: "numeric" })}</Td>
-              <Td>{r.name ?? r.merchant ?? "—"}</Td><Td>{lookups.categories.find((c) => c.id === r.category_id)?.name ?? "—"}</Td>
+              <Td>{r.name ?? r.merchant ?? "—"}<span className="block text-xs text-muted md:hidden">{lookups.categories.find((c) => c.id === r.category_id)?.name ?? ""}</span></Td><Td className="hidden md:table-cell">{lookups.categories.find((c) => c.id === r.category_id)?.name ?? "—"}</Td>
               <Td className="tabnum text-right text-good">{formatMoney(Number(r.amount_minor), profile.currency)}</Td></tr>)}
           </tbody></Table>}
         </Card>

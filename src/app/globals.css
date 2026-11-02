@@ -131,3 +131,12 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 @keyframes ping-soft { 75%, 100% { transform: scale(2.1); opacity: 0; } }
 .ping-soft { animation: ping-soft 1.8s cubic-bezier(0, 0, .2, 1) infinite; }
 @media (prefers-reduced-motion: reduce) { .ping-soft, .btn-shine::after { animation: none; transition: none; } .icon-btn:hover, .glow:hover, .avatar-ring:hover { transform: none; } }
+
+/* ---- Touch devices: comfortable tap targets without changing the desktop look ---- */
+@media (pointer: coarse) {
+  /* Small links get an invisible, larger hit area (no layout change). */
+  .tap { position: relative; }
+  .tap::after { content: ""; position: absolute; inset: -12px -8px; }
+  /* Expandable rows ("Edit", "Repayment schedule", FAQs) get a taller tap row. */
+  summary { padding-block: .5rem; }
+}

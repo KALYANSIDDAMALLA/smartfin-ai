@@ -52,13 +52,14 @@ export default async function Transactions({ searchParams }: { searchParams: Pro
       {error ? <p role="alert" className="text-sm text-bad">Could not load transactions.</p> : !data?.length ? (
         <EmptyState title="No transactions match" hint="Try a different range or clear filters." />
       ) : (
-        <Table><thead><tr><Th>Date</Th><Th>Name</Th><Th>Category</Th><Th>Method</Th><Th>Type</Th><Th className="text-right">Amount</Th><Th><span className="sr-only">Actions</span></Th></tr></thead><tbody>
+        <Table><thead><tr><Th>Date</Th><Th>Name</Th><Th className="hidden md:table-cell">Category</Th><Th className="hidden md:table-cell">Method</Th><Th className="hidden md:table-cell">Type</Th><Th className="text-right">Amount</Th><Th><span className="sr-only">Actions</span></Th></tr></thead><tbody>
           {data.map((r) => { const plus = r.type === "income" || r.type === "refund"; return (
             <tr key={r.id} data-id={r.id}>
-              <Td className="whitespace-nowrap text-muted">{new Date(r.occurred_at).toLocaleDateString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", year: "numeric" })}</Td>
-              <Td>{r.name ?? r.merchant ?? "—"}{r.merchant && r.name && <span className="block text-xs text-muted">{r.merchant}</span>}</Td>
-              <Td>{catName(r.category_id)}</Td><Td>{methodName(r.payment_method_id)}</Td>
-              <Td><TypeBadge type={r.type} /></Td>
+              <Td className="whitespace-nowrap text-muted"><span className="md:hidden">{new Date(r.occurred_at).toLocaleDateString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short" })}</span><span className="hidden md:inline">{new Date(r.occurred_at).toLocaleDateString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", year: "numeric" })}</span></Td>
+              <Td>{r.name ?? r.merchant ?? "—"}{r.merchant && r.name && <span className="block text-xs text-muted">{r.merchant}</span>}
+                <span className="block text-xs text-muted md:hidden">{[catName(r.category_id), methodName(r.payment_method_id)].filter((x) => x && x !== "—").join(" · ")}</span></Td>
+              <Td className="hidden md:table-cell">{catName(r.category_id)}</Td><Td className="hidden md:table-cell">{methodName(r.payment_method_id)}</Td>
+              <Td className="hidden md:table-cell"><TypeBadge type={r.type} /></Td>
               <Td className={`tabnum text-right ${plus ? "text-good" : ""}`}>{plus ? "+" : ""}{formatMoney(Number(r.amount_minor), profile.currency)}</Td>
               <Td><ConfirmAction action={deleteTransaction} fields={{ id: r.id }} label={`Delete ${r.name ?? "transaction"}`} confirm={`${r.name ?? r.merchant ? `Delete “${r.name ?? r.merchant}” (${formatMoney(Number(r.amount_minor), profile.currency)})?` : `Delete this ${formatMoney(Number(r.amount_minor), profile.currency)} ${r.type}?`} It will no longer count in your totals.`} success="Transaction deleted.">Delete</ConfirmAction></Td>
             </tr>); })}

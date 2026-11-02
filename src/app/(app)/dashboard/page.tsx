@@ -84,7 +84,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             <p className="mt-3 border-t border-line pt-3 text-xs text-muted">Want to see how small cuts add up? <b className="font-medium text-fg">AI analysis</b> has a what-if simulator, a 30-day savings plan and one-tap budgets.</p></Card>}
           <div className="grid gap-6 lg:grid-cols-2">
             <Card><h2 className="mb-3 font-medium">Spending by category</h2><DonutChart data={donut} /></Card>
-            <Card><div className="mb-3 flex items-center justify-between"><h2 className="font-medium">Recent transactions</h2><Link href="/transactions" className="text-sm text-brand">View all</Link></div>
+            <Card><div className="mb-3 flex items-center justify-between"><h2 className="font-medium">Recent transactions</h2><Link href="/transactions" className="tap text-sm text-brand">View all</Link></div>
               <Table><thead><tr><Th>Date</Th><Th>Name</Th><Th className="text-right">Amount</Th></tr></thead><tbody>
                 {recent.map((r) => (<tr key={r.id}><Td className="whitespace-nowrap text-muted">{new Date(r.occurred_at).toLocaleDateString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short" })}</Td>
                   <Td>{r.name ?? r.merchant ?? r.type}</Td>

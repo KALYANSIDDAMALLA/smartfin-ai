@@ -10,10 +10,10 @@ export function RangeFilter({ base, sp, active }: { base: string; sp: SP; active
   };
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <nav aria-label="Date range" className="flex gap-1 rounded-lg border border-line bg-surface p-1">
+      <nav aria-label="Date range" className="flex w-full gap-1 rounded-lg border border-line bg-surface p-1 sm:w-auto">
         {PRESETS.filter((p) => p.key !== "custom").map((p) => (
           <Link key={p.key} href={href(p.key)} aria-current={active === p.key ? "true" : undefined}
-            className={cn("rounded-md px-3 py-1 text-sm hover:bg-surface2", active === p.key && "bg-brand text-brandfg hover:bg-brand")}>{p.label}</Link>
+            className={cn("flex-1 whitespace-nowrap rounded-md px-1.5 py-2.5 text-center text-sm hover:bg-surface2 sm:flex-none sm:px-3 sm:py-1", active === p.key && "bg-brand text-brandfg hover:bg-brand")}>{p.label}</Link>
         ))}
       </nav>
       <form className="flex flex-wrap items-center gap-1 text-sm" action={base}>

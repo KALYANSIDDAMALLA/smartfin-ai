@@ -186,7 +186,7 @@ export default async function Home() {
         <div className="border-t border-line">
           <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-xs text-muted sm:px-6 md:flex-row md:items-start md:justify-between">
             <p className="max-w-3xl">SmartFin AI tracks and analyses finances. It is not a bank, wallet or payment service and never moves money. Insights, forecasts and plans are estimates, not financial, tax or investment advice.</p>
-            <a href="#top" className="inline-flex shrink-0 items-center gap-1 hover:text-fg"><ArrowUp size={14} aria-hidden />Back to top</a>
+            <a href="#top" className="tap inline-flex shrink-0 items-center gap-1 hover:text-fg"><ArrowUp size={14} aria-hidden />Back to top</a>
           </div>
         </div>
       </footer>

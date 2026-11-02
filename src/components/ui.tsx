@@ -42,5 +42,6 @@ export const EmptyState = ({ title, hint, action }: { title: string; hint?: stri
 );
 export const ErrorNote = ({ children }: { children: React.ReactNode }) => <p role="alert" className="rounded-lg border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">{children}</p>;
 export const Table = ({ className, ...p }: React.TableHTMLAttributes<HTMLTableElement>) => <div className="relative overflow-x-auto"><table {...p} className={cn("w-full text-left text-sm", className)} /></div>;
-export const Th = ({ className, ...p }: React.ThHTMLAttributes<HTMLTableCellElement>) => <th {...p} className={cn("border-b border-line px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted", className)} />;
-export const Td = ({ className, ...p }: React.TdHTMLAttributes<HTMLTableCellElement>) => <td {...p} className={cn("border-b border-line/60 px-3 py-2.5", className)} />;
+export const Th = ({ className, ...p }: React.ThHTMLAttributes<HTMLTableCellElement>) => <th {...p} className={cn("border-b border-line px-2 py-2 text-xs font-medium uppercase tracking-wide text-muted sm:px-3", className)} />;
+/** Number columns (class "tabnum") never wrap, so "+₹85,000" can't split across two lines on a phone; the table scrolls sideways instead. */
+export const Td = ({ className, ...p }: React.TdHTMLAttributes<HTMLTableCellElement>) => <td {...p} className={cn("border-b border-line/60 px-2 py-2.5 [overflow-wrap:anywhere] sm:px-3", typeof className === "string" && /\btabnum\b/.test(className) && "whitespace-nowrap", className)} />;

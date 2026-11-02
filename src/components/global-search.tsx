@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Search, CornerDownLeft, type LucideIcon } from "lucide-react";
 import { NAV_ITEMS, hintsFor } from "@/lib/nav";
@@ -16,9 +16,14 @@ function score(q: string, i: { label: string; group: string; kw?: string }) {
   const hay = `${l} ${norm(i.group)} ${norm(i.kw ?? "")}`; return words.every((w) => hay.includes(w)) ? 1 : 0;
 }
 
+/** True on phone-width screens, where the long placeholder would be cut mid-word and "Ctrl K" means nothing. */
+const NARROW = "(max-width: 767px)";
+const watchNarrow = (cb: () => void) => { const mq = window.matchMedia(NARROW); mq.addEventListener("change", cb); return () => mq.removeEventListener("change", cb); };
+
 /** Header search: click it for ideas for this page, type to jump to a page/sub-module or run a plain-English transaction search. Ctrl/⌘+K focuses it. */
 export function GlobalSearch({ ctx, className }: { ctx?: Pick<SearchCtx, "categories" | "methods">; className?: string }) {
   const router = useRouter(); const path = usePathname(); const input = useRef<HTMLInputElement>(null);
+  const narrow = useSyncExternalStore(watchNarrow, () => window.matchMedia(NARROW).matches, () => false);
   const [q, setQ] = useState(""); const [open, setOpen] = useState(false); const [activeRaw, setActive] = useState(0);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); input.current?.focus(); input.current?.select(); setOpen(true); } };
@@ -52,7 +57,7 @@ export function GlobalSearch({ ctx, className }: { ctx?: Pick<SearchCtx, "catego
     <div role="search" className={cn("relative", className)}>
       <Search size={16} className="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" aria-hidden />
       <input ref={input} name="q" role="combobox" aria-expanded={open} aria-controls="global-search-list" aria-autocomplete="list" aria-activedescendant={open && items[active] ? `gs-${items[active].id}` : undefined}
-        aria-label="Search pages or transactions" autoComplete="off" value={q} placeholder="Search pages or transactions…  Ctrl K"
+        aria-label="Search pages or transactions" autoComplete="off" value={q} placeholder={narrow ? "Search…" : "Search pages or transactions…  Ctrl K"}
         onChange={(e) => { setQ(e.target.value); setActive(0); setOpen(true); }} onFocus={() => setOpen(true)} onClick={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={onKeyDown}
         className="h-9 w-full rounded-lg border border-line bg-bg/60 pl-9 pr-3 text-sm outline-none transition focus:bg-bg" />
       {open && items.length > 0 && (

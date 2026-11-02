@@ -52,11 +52,11 @@ export function TxFilters({ categories, methods, count }: { categories: { id: st
           <Search size={16} aria-hidden className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" />
           <input value={q} onChange={(e) => { setQ(e.target.value); later({ q: e.target.value.trim() || null }); }} aria-label="Search transactions" placeholder="Search name, merchant or description…" autoComplete="off"
             className="h-10 w-full min-w-0 rounded-lg border border-line bg-surface/70 pl-9 pr-9 text-sm" />
-          {q && <button type="button" aria-label="Clear search" onClick={() => { setQ(""); go({ q: null }); }} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted hover:text-fg"><X size={14} /></button>}
+          {q && <button type="button" aria-label="Clear search" onClick={() => { setQ(""); go({ q: null }); }} className="absolute right-0 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded text-muted hover:text-fg"><X size={14} /></button>}
         </div>
-        <div role="group" aria-label="Date range" className="order-last flex w-full gap-1 overflow-x-auto rounded-lg border border-line bg-surface/70 p-1 md:order-none md:w-auto md:overflow-visible">
+        <div role="group" aria-label="Date range" className="order-last flex w-full flex-wrap gap-1 rounded-lg border border-line bg-surface/70 p-1 md:order-none md:w-auto">
           {PRESETS.map(([k, label]) => <button key={k} type="button" aria-pressed={range === k} onClick={() => go(k === "custom" ? { range: "custom" } : { range: k, from: null, to: null })}
-            className={cn("shrink-0 whitespace-nowrap rounded-md px-2.5 py-1 text-sm transition", range === k ? "bg-brand text-brandfg shadow-sm" : "hover:bg-surface2")}>{label}</button>)}
+            className={cn("grow whitespace-nowrap rounded-md px-2.5 py-2 text-center text-sm transition md:grow-0 md:py-1", range === k ? "bg-brand text-brandfg shadow-sm" : "hover:bg-surface2")}>{label}</button>)}
         </div>
         <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm transition hover:border-brand/50 md:hidden"><SlidersHorizontal size={15} aria-hidden />Filters{chips.length > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-semibold text-brandfg">{chips.length}</span>}</button>
       </div>

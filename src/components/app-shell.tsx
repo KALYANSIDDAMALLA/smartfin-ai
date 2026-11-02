@@ -26,6 +26,14 @@ export function AppShell({ children, name, unread, avatarUrl, searchCtx, timezon
     document.addEventListener("mousedown", down); document.addEventListener("keydown", key);
     return () => { document.removeEventListener("mousedown", down); document.removeEventListener("keydown", key); };
   }, [menu]);
+  // The phone menu drawer: the page behind it stops scrolling while it is open, and Esc closes it.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", key);
+    return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", key); };
+  }, [open]);
   const { resolvedTheme, setTheme } = useTheme();
   // Sidebar preferences (per browser): which module groups are open, and whether the desktop sidebar is collapsed to icons.
   const [openRaw, setOpenRaw] = usePref("sf.nav.open", JSON.stringify(["Money"]));
@@ -90,20 +98,20 @@ export function AppShell({ children, name, unread, avatarUrl, searchCtx, timezon
         {renderNav(collapsed)}
         {renderTail(collapsed)}
       </aside>
-      {open && <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal>
+      {open && <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal aria-label="Menu">
         <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-        <div className="pop absolute left-0 top-0 flex h-full w-72 flex-col overflow-y-auto rounded-r-2xl"><div className="flex items-center justify-between px-6 py-4"><Link href="/dashboard" onClick={() => setOpen(false)} className="text-brand"><Logo /></Link><button aria-label="Close menu" onClick={() => setOpen(false)}><X size={18} /></button></div>{renderTop(false)}{renderNav(false)}{renderTail(false)}</div>
+        <div className="pop absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col overflow-y-auto overscroll-contain rounded-r-2xl"><div className="flex items-center justify-between px-6 py-4"><Link href="/dashboard" onClick={() => setOpen(false)} className="text-brand"><Logo /></Link><button aria-label="Close menu" onClick={() => setOpen(false)} className="-mr-3 grid h-11 w-11 place-items-center rounded-lg hover:bg-surface2/60"><X size={18} /></button></div>{renderTop(false)}{renderNav(false)}{renderTail(false)}</div>
       </div>}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="glass sticky top-3 z-30 mx-3 mt-3 grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl px-4 lg:mr-4 2xl:grid-cols-[1fr_minmax(0,26rem)_1fr]">
-          <div className="flex items-center gap-3"><button className="lg:hidden" aria-label="Open menu" onClick={() => setOpen(true)}><Menu size={20} /></button>
+        <header className="glass sticky top-3 z-30 mx-3 mt-3 grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl px-3 sm:gap-3 sm:px-4 lg:mr-4 2xl:grid-cols-[1fr_minmax(0,26rem)_1fr]">
+          <div className="flex items-center gap-3"><button className="-ml-2 grid h-11 w-11 place-items-center rounded-lg hover:bg-surface2/60 lg:hidden" aria-label="Open menu" onClick={() => setOpen(true)}><Menu size={20} /></button>
             <div className="hidden md:block"><LiveClock timezone={timezone} /></div></div>
           <GlobalSearch ctx={searchCtx} className="mx-auto w-full min-w-0 max-w-lg 2xl:max-w-none" />
-          <div className="flex min-w-0 items-center justify-end gap-2">
-            <CalculatorButton />
+          <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+            <div className="hidden sm:block"><CalculatorButton /></div>
             <button type="button" aria-label="Toggle theme" data-tip="Switch theme" className="icon-btn" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}><Sun size={18} className="hidden dark:block" /><Moon size={18} className="dark:hidden" /></button>
             <Link href="/notifications" aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`} data-tip={unread ? `${unread} unread` : "Notifications"} className="icon-btn"><Bell size={18} />
-              {unread > 0 && <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center"><span className="ping-soft absolute inline-flex h-full w-full rounded-full bg-bad/60" aria-hidden /><span className="relative grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[10px] font-semibold text-white">{unread > 9 ? "9+" : unread}</span></span>}</Link>
+              {unread > 0 && <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center"><span className="ping-soft absolute inline-flex h-full w-full rounded-full bg-bad/60" aria-hidden /><span className="relative grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[11px] font-semibold text-white">{unread > 9 ? "9+" : unread}</span></span>}</Link>
             <div className="relative" ref={menuBox}>
               <button type="button" aria-haspopup="menu" aria-expanded={menu} aria-label={`Account menu, ${name}`} onClick={() => setMenu(!menu)}
                 className={cn("flex items-center gap-2 rounded-full border border-line/70 bg-surface2/50 p-0.5 pr-0.5 transition hover:border-brand/50 xl:pr-3", menu && "border-brand/60 bg-brand/10")}>

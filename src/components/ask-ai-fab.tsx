@@ -38,7 +38,7 @@ export function AskAiFab() {
         </div>
       )}
       <button type="button" onClick={() => { setOpen((o) => !o); setTimeout(() => input.current?.focus(), 50); }} aria-expanded={open}
-        className="btn-shine glow ml-auto flex h-12 items-center gap-2 rounded-full bg-linear-to-b from-brand to-brand/85 px-4 text-sm font-semibold text-brandfg"><Sparkles size={16} aria-hidden />Ask AI</button>
+        aria-label="Ask AI" className="btn-shine glow ml-auto flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-linear-to-b from-brand to-brand/85 text-sm font-semibold text-brandfg sm:w-auto sm:px-4"><Sparkles size={18} aria-hidden /><span className="hidden sm:inline">Ask AI</span></button>
     </div>
   );
 }

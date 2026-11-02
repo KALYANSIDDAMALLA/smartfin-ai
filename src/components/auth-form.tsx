@@ -63,7 +63,7 @@ export function AuthForm({ mode, action, next }: { mode: Mode; action: (s: FormS
   const [resend, startResend] = useTransition();
   const [resendMsg, setResendMsg] = useState<string>(); const [captchaErr, setCaptchaErr] = useState<string>();
   const sent = mode === "register" && !!state?.ok;
-  const chip = "inline-flex h-7 items-center gap-1 rounded-md border border-line bg-surface px-2.5 text-xs font-medium transition hover:bg-surface2 disabled:cursor-not-allowed disabled:opacity-50";
+  const chip = "inline-flex h-9 items-center sm:h-7 gap-1 rounded-md border border-line bg-surface px-2.5 text-xs font-medium transition hover:bg-surface2 disabled:cursor-not-allowed disabled:opacity-50";
   const [code, setCode] = useState(""); const [codeErr, setCodeErr] = useState<string>(); const [checking, startCheck] = useTransition();
   const doVerify = () => { if (!/^\d{6}$/.test(code)) { setCodeErr("Enter the 6-digit code"); return; } setCodeErr(undefined);
     startCheck(async () => { const fd = new FormData(); fd.set("email", v.email ?? ""); fd.set("code", code); const r = await verifyEmailCode(undefined, fd); if (r?.error) setCodeErr(r.error); }); };
@@ -77,10 +77,10 @@ export function AuthForm({ mode, action, next }: { mode: Mode; action: (s: FormS
     className: cn(inputCls, "h-10 pl-9", err(k) && "border-bad focus-visible:outline-bad"), ...extra,
   });
   const pw = (k: "password" | "confirm", label: string, auto: string, hint?: string) => (
-    <AuthField id={`${uid}-${k}`} label={label} icon={Lock} error={err(k)} hint={hint} aside={mode === "login" && k === "password" ? <Link href="/forgot-password" className="text-xs font-medium text-brand hover:underline">Forgot password?</Link> : undefined}>
+    <AuthField id={`${uid}-${k}`} label={label} icon={Lock} error={err(k)} hint={hint} aside={mode === "login" && k === "password" ? <Link href="/forgot-password" className="tap text-xs font-medium text-brand hover:underline">Forgot password?</Link> : undefined}>
       <input {...props(k, { type: show[k] ? "text" : "password", autoComplete: auto, placeholder: k === "confirm" ? "Repeat your password" : mode === "login" ? "Enter your password" : "At least 8 characters" })} className={cn(inputCls, "h-10 pl-9 pr-10", err(k) && "border-bad focus-visible:outline-bad")} />
       <button type="button" onClick={() => setShow((s) => ({ ...s, [k]: !s[k] }))} aria-label={show[k] ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`} aria-pressed={show[k]}
-        className="absolute right-1.5 top-1/2 z-10 -translate-y-1/2 rounded-md p-1.5 text-muted hover:bg-surface2 hover:text-fg">{show[k] ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+        className="absolute right-0.5 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-md text-muted hover:bg-surface2 hover:text-fg">{show[k] ? <EyeOff size={16} /> : <Eye size={16} />}</button>
     </AuthField>
   );
   const wide = mode === "register" || mode === "reset";

@@ -31,7 +31,7 @@ export function Breadcrumbs() {
           <li key={i} className="flex items-center gap-1">
             {i > 0 && <ChevronRight size={12} aria-hidden className="opacity-60" />}
             {i === last ? <span aria-current="page" className="font-semibold text-fg">{c.label}</span>
-              : c.href ? <Link href={c.href} className={`inline-flex items-center gap-1 rounded px-1 py-0.5 transition hover:bg-brand/10 hover:text-brand ${i === 0 ? "-ml-1" : ""}`}>{i === 0 && <Home size={12} aria-hidden />}{c.label}</Link>
+              : c.href ? <Link href={c.href} className={`-my-2 inline-flex items-center gap-1 rounded px-1 py-2.5 transition hover:bg-brand/10 hover:text-brand ${i === 0 ? "-ml-1" : ""}`}>{i === 0 && <Home size={12} aria-hidden />}{c.label}</Link>
               : <span className="px-1">{c.label}</span>}
           </li>))}
       </ol>
