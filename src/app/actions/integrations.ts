@@ -101,11 +101,22 @@ export async function syncConnection(_: FormState, fd: FormData): Promise<FormSt
   }
 }
 
+/** "Check balance" for a linked bank, like payment apps. Demo connections answer from their seeded balance; live ones need the provider's balance call, which isn't wired yet. */
+export async function checkBalance(id: string): Promise<{ balanceMinor: number; asOf: string } | { error: string }> {
+  const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
+  if (!rateLimit(`bal:${a.user.id}`, 30, 60 * 60_000).ok) return { error: "Too many balance checks. Try again in a while." };
+  const c = await ownConnection(a, id); if (!c || c.status !== "connected") return { error: "This bank isn't linked." };
+  const meta = (c.meta ?? {}) as { demo?: boolean; balanceMinor?: number };
+  if (meta.demo && typeof meta.balanceMinor === "number") return { balanceMinor: meta.balanceMinor, asOf: new Date().toISOString() };
+  return { error: "Live balance isn't available yet. Fetch transactions to refresh your records." };
+}
+
 /** Revoke at the provider first (so access really stops), then record it. */
 export async function disconnectBank(_: FormState, fd: FormData): Promise<FormState> {
   const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
   const conn = await ownConnection(a, String(fd.get("id"))); if (!conn) return { error: "Connection not found." };
-  if (conn.external_id && ["connected", "pending_consent"].includes(conn.status)) {
+  const isDemo = !!(conn.meta as { demo?: boolean } | null)?.demo; // demo rows have no real consent at the provider
+  if (!isDemo && conn.external_id && ["connected", "pending_consent"].includes(conn.status)) {
     try { await revokeConsent(conn.external_id); } catch (e) { if (!(e instanceof SetuError && e.status === 404)) return providerErr(e); }
   }
   await a.supabase.from("integration_connections").update({ status: "revoked" }).eq("id", conn.id);

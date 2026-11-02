@@ -8,6 +8,7 @@ import { archiveAccount } from "@/app/actions/accounts";
 import { disconnectBank, refreshConnection, syncConnection } from "@/app/actions/integrations";
 import { ActionForm } from "@/components/action-form";
 import { AddAccountForm, BankLinkForm } from "@/components/bank-forms";
+import { CheckBalance } from "@/components/check-balance";
 import { SummaryLine } from "@/components/summary-line";
 import { Badge, Card, PageHeader } from "@/components/ui";
 
@@ -20,7 +21,7 @@ const STEPS = [
 const STATUS: Record<string, { label: string; tone: "good" | "warn" | "neutral" | "bad" }> = {
   connected: { label: "Linked", tone: "good" }, pending_consent: { label: "Waiting for your approval", tone: "warn" }, expired: { label: "Expired", tone: "neutral" }, error: { label: "Problem", tone: "bad" }, pending_configuration: { label: "Not set up", tone: "neutral" },
 };
-type Meta = { bank?: string; mobileLast4?: string; accounts?: { masked: string }[] };
+type Meta = { bank?: string; mobileLast4?: string; demo?: boolean; accounts?: { masked: string; type?: string }[] };
 
 export default async function BankLinks() {
   const { supabase, profile } = await requireUser(); const live = setuConfigured(); const m = (v: number) => formatMoney(v, profile.currency);
@@ -48,11 +49,13 @@ export default async function BankLinks() {
         {!!conns?.length && <Card><h2 className="mb-3 font-medium">Your linked banks</h2><ul className="grid gap-3">{conns.map((c) => { const meta = (c.meta ?? {}) as Meta; const st = STATUS[c.status] ?? STATUS.error; const bank = meta.bank ?? "Bank account"; return (
           <li key={c.id} className="rounded-xl border border-line bg-surface/60 p-4"><div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white" style={{ background: `hsl(${bankHue(bank)} 60% 45%)` }}><Landmark size={18} aria-hidden /></span>
-              <div className="min-w-0"><p className="truncate font-medium">{bank} <Badge tone={st.tone}>{st.label}</Badge></p>
-                <p className="text-xs text-muted">{meta.mobileLast4 ? `Mobile ••••${meta.mobileLast4}` : ""}{meta.accounts?.length ? ` · ${meta.accounts.map((a) => a.masked).filter(Boolean).join(", ")}` : ""}{c.last_synced_at ? ` · last synced ${new Date(c.last_synced_at).toLocaleString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}` : ""}</p></div></div>
+              <div className="min-w-0"><p className="truncate font-medium">{bank} <Badge tone={st.tone}>{st.label}</Badge>{meta.demo && <> <Badge tone="info">Demo data</Badge></>}</p>
+                {!!meta.accounts?.length && <p className="text-sm">{meta.accounts.map((a) => `${a.type ?? "Account"} ${a.masked}`).join(" · ")}</p>}
+                <p className="text-xs text-muted">{meta.mobileLast4 ? `Mobile ••••${meta.mobileLast4}` : ""}{c.last_synced_at ? ` · last synced ${new Date(c.last_synced_at).toLocaleString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}` : ""}</p></div></div>
             <div className="flex flex-wrap items-center gap-2">
+              {c.status === "connected" && <CheckBalance connectionId={c.id} currency={profile.currency} timezone={profile.timezone} />}
               {c.status === "pending_consent" && <ActionForm action={refreshConnection} compact submit="I approved, check status" variant="outline"><input type="hidden" name="id" value={c.id} /></ActionForm>}
-              {c.status === "connected" && <ActionForm action={syncConnection} compact submit="Fetch transactions now" variant="outline"><input type="hidden" name="id" value={c.id} /></ActionForm>}
+              {c.status === "connected" && !meta.demo && <ActionForm action={syncConnection} compact submit="Fetch transactions now" variant="outline"><input type="hidden" name="id" value={c.id} /></ActionForm>}
               <ActionForm action={disconnectBank} compact submit="Disconnect" variant="danger" confirm={`Stop sharing data from ${bank}? Transactions already saved stay.`}><input type="hidden" name="id" value={c.id} /></ActionForm></div></div></li>); })}</ul></Card>}
 
         <Card>

@@ -271,4 +271,19 @@ begin
     (a,'unusual','Unusual spending to review','₹8,999 (Laptop repair) is higher than your usual spending.', now() - interval '14 days');
 end $$;
 
+-- ---- "linked" banks, shown the way payment apps show them (demo only: no live bank call is made) ----
+-- meta.demo = true makes the app's "Check balance" button answer from meta.balanceMinor instead of calling the Account Aggregator.
+do $$
+declare p constant uuid := 'a0000000-0000-4000-8000-000000000001'; a constant uuid := 'a0000000-0000-4000-8000-000000000002';
+begin
+  insert into accounts (user_id, name, kind, opening_balance_minor) values (a, 'SBI Savings', 'bank', 2500000);
+  insert into integration_connections (user_id, provider, status, last_synced_at, external_id, meta) values
+    (p, 'account_aggregator', 'connected', now() - interval '12 minutes', 'demo-consent-hdfc',
+      '{"demo":true,"bank":"HDFC Bank","mobileLast4":"4821","accounts":[{"masked":"XXXXXX4821","type":"Savings account","label":"HDFC Savings"}],"balanceMinor":18642550}'),
+    (p, 'account_aggregator', 'connected', now() - interval '12 minutes', 'demo-consent-icici',
+      '{"demo":true,"bank":"ICICI Bank","mobileLast4":"4821","accounts":[{"masked":"XXXX7305","type":"Credit card","label":"ICICI Credit Card"}],"balanceMinor":-1284000}'),
+    (a, 'account_aggregator', 'connected', now() - interval '3 hours', 'demo-consent-sbi',
+      '{"demo":true,"bank":"State Bank of India","mobileLast4":"9137","accounts":[{"masked":"XXXXXX2290","type":"Savings account","label":"SBI Savings"}],"balanceMinor":3187500}');
+end $$;
+
 select 'Demo data created. Log in with priya.demo@smartfin.demo or arjun.demo@smartfin.demo, password Demo@12345' as result;
