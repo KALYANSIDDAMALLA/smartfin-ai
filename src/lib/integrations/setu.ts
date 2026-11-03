@@ -28,9 +28,12 @@ async function call<T>(method: "GET" | "POST", path: string, body?: unknown): Pr
 export interface SetuConsent { id: string; url: string; status: "PENDING" | "ACTIVE" | "REJECTED" | "REVOKED" | "PAUSED" | "EXPIRED" | string; detail?: { accounts?: { maskedAccNumber?: string; fipId?: string; accType?: string }[] }; accountsLinked?: unknown[] }
 export interface SetuSession { id: string; status: "PENDING" | "PARTIAL" | "COMPLETED" | "EXPIRED" | "FAILED" | string; fips?: unknown[] | null }
 
+/** The customer address Setu expects: the mobile number, plus an Account Aggregator handle when SETU_VUA_HANDLE is set (the sandbox needs one, e.g. "finvu"; production usually takes the plain number). */
+export const customerAddress = (mobile: string, handle = process.env.SETU_VUA_HANDLE) => { const h = (handle ?? "").trim().replace(/^@/, ""); return h ? `${mobile}@${h}` : mobile; };
+
 export const createConsent = (p: { vua: string; from: Date; to: Date; months: number }) =>
   call<SetuConsent>("POST", "/consents", {
-    consentDuration: { unit: "MONTH", value: String(p.months) }, vua: p.vua,
+    consentDuration: { unit: "MONTH", value: String(p.months) }, vua: customerAddress(p.vua),
     dataRange: { from: p.from.toISOString(), to: p.to.toISOString() }, context: [],
   });
 export const getConsent = (id: string) => call<SetuConsent>("GET", `/consents/${encodeURIComponent(id)}?expanded=true`);

@@ -5,7 +5,7 @@ import { setuConfigured } from "@/lib/integrations/setu";
 import { ACCOUNT_TYPES, bankHue } from "@/lib/banks";
 import { formatMoney } from "@/lib/finance/money";
 import { archiveAccount } from "@/app/actions/accounts";
-import { disconnectBank, refreshConnection, syncConnection } from "@/app/actions/integrations";
+import { connectDemoBank, disconnectBank, loadDemoTransactions, refreshConnection, syncConnection } from "@/app/actions/integrations";
 import { ActionForm } from "@/components/action-form";
 import { AddAccountForm, BankLinkForm } from "@/components/bank-forms";
 import { AccountBalance } from "@/components/account-balance";
@@ -31,6 +31,7 @@ export default async function BankLinks() {
     supabase.from("accounts").select("*").eq("archived", false).order("created_at"),
     supabase.from("integration_consents").select("*").order("created_at", { ascending: false }).limit(20),
   ]);
+  const hasDemo = (conns ?? []).some((c) => (c.meta as Meta | null)?.demo);
   const linked = (conns ?? []).filter((c) => c.status === "connected").length; const nAcc = accounts?.length ?? 0;
   return (
     <>
@@ -45,6 +46,8 @@ export default async function BankLinks() {
           {!live && <div role="status" className="mb-4 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"><b>Live bank linking is not switched on yet.</b> You can still add your accounts below and import bank statements.
             <details className="mt-1 text-xs text-muted"><summary className="cursor-pointer text-brand">App owner? What is needed</summary><span className="mt-1 block">Add Setu Account Aggregator credentials (<code>SETU_CLIENT_ID</code>, <code>SETU_CLIENT_SECRET</code>, <code>SETU_PRODUCT_INSTANCE_ID</code>) to the server settings and restart. A free sandbox is available on Setu Bridge; going live needs Setu&apos;s approval.</span></details></div>}
           <BankLinkForm enabled={live} />
+          {!hasDemo && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4"><p className="max-w-xl text-sm text-muted">No bank handy, or just exploring? Add a <b className="font-medium text-fg">demo bank</b> with sample accounts and transactions. It is clearly marked and is not a real bank.</p>
+            <ActionForm action={connectDemoBank} compact submit="Try a demo bank" variant="outline" /></div>}
         </Card>
 
         {!!conns?.length && <Card><h2 className="mb-3 font-medium">Your linked banks</h2><ul className="grid gap-3">{conns.map((c) => { const meta = (c.meta ?? {}) as Meta; const st = STATUS[c.status] ?? STATUS.error; const bank = meta.bank ?? "Bank account"; return (
@@ -56,6 +59,7 @@ export default async function BankLinks() {
             <div className="flex flex-wrap items-center gap-2">
               {c.status === "connected" && <CheckBalance connectionId={c.id} currency={profile.currency} timezone={profile.timezone} />}
               {c.status === "pending_consent" && <ActionForm action={refreshConnection} compact submit="I approved, check status" variant="outline"><input type="hidden" name="id" value={c.id} /></ActionForm>}
+              {c.status === "connected" && meta.demo && <ActionForm action={loadDemoTransactions} compact submit="Load sample transactions" variant="outline"><input type="hidden" name="id" value={c.id} /></ActionForm>}
               {c.status === "connected" && !meta.demo && <ActionForm action={syncConnection} compact submit="Fetch transactions now" variant="outline"><input type="hidden" name="id" value={c.id} /></ActionForm>}
               <ActionForm action={disconnectBank} compact submit="Disconnect" variant="danger" confirm={`Stop sharing data from ${bank}? Transactions already saved stay.`}><input type="hidden" name="id" value={c.id} /></ActionForm></div></div></li>); })}</ul></Card>}
 

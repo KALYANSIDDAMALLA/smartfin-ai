@@ -10,6 +10,7 @@ import { stage } from "@/lib/server/staging";
 import { createConsent, createSession, getConsent, getSession, revokeConsent, setuConfigured, SetuError } from "@/lib/integrations/setu";
 import { AA_MAPPING, extractAATransactions } from "@/lib/integrations/aa-map";
 import { bankById } from "@/lib/banks";
+import { DEMO_BANK, sampleBankRows } from "@/lib/integrations/demo";
 import type { FormState } from "./auth";
 
 const PROVIDER = "account_aggregator";
@@ -17,7 +18,14 @@ const SCOPES = ["account_summary", "transactions"];
 const CONSENT_MONTHS = 12;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const providerErr = (e: unknown): FormState => {
-  if (e instanceof SetuError) { console.error("setu:", e.status, e.code, e.message); return { error: e.code === "NotConfigured" ? "Bank connections aren't configured on this server." : e.status === 404 ? "The provider couldn't find that consent." : "The bank-data provider returned an error. Please try again shortly." }; }
+  if (e instanceof SetuError) {
+    console.error("setu:", e.status, e.code, e.message);
+    if (e.code === "NotConfigured") return { error: "Bank connections aren't configured on this server." };
+    if (e.status === 404) return { error: "The provider couldn't find that consent." };
+    // 4xx other than 404/429 means the request or the app's provider settings are wrong: retrying won't help, so don't say so.
+    if (e.status >= 400 && e.status < 500 && e.status !== 429) return { error: "Bank linking isn't fully set up yet, so this bank can't be linked right now. You can import a statement or try the demo bank instead." };
+    return { error: "The bank-data provider is busy or unavailable. Please try again in a few minutes." };
+  }
   console.error("integration error", (e as Error).message); return { error: "Something went wrong. Please try again." };
 };
 
@@ -122,4 +130,37 @@ export async function disconnectBank(_: FormState, fd: FormData): Promise<FormSt
   await a.supabase.from("integration_connections").update({ status: "revoked" }).eq("id", conn.id);
   if (conn.status === "connected") await a.supabase.from("integration_consents").insert({ user_id: a.user.id, connection_id: conn.id, provider: PROVIDER, scopes: SCOPES, action: "revoked" });
   revalidatePath("/integrations"); return { ok: "Disconnected. The bank can no longer share data with SmartFin." };
+}
+
+/** Adds a clearly marked DEMO bank (sample accounts and balance, no real consent) so the whole flow can be tried without an Account Aggregator. */
+export async function connectDemoBank(): Promise<FormState> {
+  const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
+  if (!rateLimit(`aa-demo:${a.user.id}`, 5, 60 * 60_000).ok) return { error: "Too many attempts. Try again later." };
+  const { data: existing } = await a.supabase.from("integration_connections").select("id,meta").eq("provider", PROVIDER).neq("status", "revoked");
+  if ((existing ?? []).some((c) => (c.meta as { demo?: boolean } | null)?.demo)) return { error: "You already have a demo bank. Remove it first to add a new one." };
+  const { error } = await a.supabase.from("integration_connections").insert({ user_id: a.user.id, provider: PROVIDER, status: "connected",
+    meta: { bank: DEMO_BANK.name, demo: true, accounts: [{ masked: DEMO_BANK.masked, type: DEMO_BANK.type }], balanceMinor: DEMO_BANK.balanceMinor } });
+  if (error) return { error: "Could not add the demo bank." };
+  revalidatePath("/integrations"); return { ok: "Demo bank added. Press “Load sample transactions” to try the review step." };
+}
+
+/** Stages sample transactions for review (never straight into the ledger), exactly like a real bank sync. */
+export async function loadDemoTransactions(_: FormState, fd: FormData): Promise<FormState> {
+  const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
+  if (!rateLimit(`aa-demo-load:${a.user.id}`, 10, 60 * 60_000).ok) return { error: "Too many attempts. Try again later." };
+  const conn = await ownConnection(a, String(fd.get("id")));
+  if (!conn || conn.status !== "connected" || !(conn.meta as { demo?: boolean } | null)?.demo) return { error: "Demo bank not found." };
+  const rows = sampleBankRows(); const now = new Date();
+  const { data: prof } = await a.supabase.from("profiles").select("timezone").eq("id", a.user.id).single();
+  const batchId = randomUUID();
+  const { error: be } = await a.supabase.from("import_batches").insert({ id: batchId, user_id: a.user.id, file_name: `Demo bank sample ${now.toISOString().slice(0, 10)} (${DEMO_BANK.masked})`, file_kind: "aa", storage_path: `aa:${conn.id}`, size_bytes: Math.max(1, JSON.stringify(rows).length), status: "processing" });
+  if (be) return { error: "Could not prepare the sample transactions." };
+  try {
+    await stage(a.supabase, a.user.id, batchId, rows, AA_MAPPING, prof?.timezone ?? "Asia/Kolkata");
+    await a.supabase.from("import_batches").update({ status: "preview" }).eq("id", batchId);
+    await a.supabase.from("integration_connections").update({ last_synced_at: now.toISOString() }).eq("id", conn.id);
+  } catch (e) { console.error("demo load failed", (e as Error).message); return { error: "Could not load the sample transactions." }; }
+  await notify(a.user.id, "import", "Sample bank transactions ready to review", `${rows.length} demo transactions loaded. They are sample data.`);
+  revalidatePath("/integrations"); revalidatePath("/imports");
+  redirect(`/imports/${batchId}`);
 }
