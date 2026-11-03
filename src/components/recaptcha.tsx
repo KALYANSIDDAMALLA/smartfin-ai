@@ -30,7 +30,7 @@ export function Recaptcha({ resetSignal, error, onSolve }: { resetSignal?: unkno
   const holder = useRef<HTMLDivElement>(null); const [k, setK] = useState(1); // scale that makes Google's fixed 304px widget match the width of the form
   useEffect(() => {
     const el = holder.current; if (!el) return;
-    const ro = new ResizeObserver(() => setK(Math.min(1.6, Math.max(0.7, el.clientWidth / 304)))); ro.observe(el); return () => ro.disconnect();
+    const ro = new ResizeObserver(() => setK(Math.min(1, Math.max(0.7, el.clientWidth / 304)))); ro.observe(el); return () => ro.disconnect();
   }, []);
   const box = useRef<HTMLDivElement>(null); const id = useRef<number | null>(null); const { resolvedTheme } = useTheme(); const theme = useRef(resolvedTheme === "dark" ? "dark" : "light"); const solved = useRef(onSolve); useEffect(() => { solved.current = onSolve; });
   useEffect(() => {

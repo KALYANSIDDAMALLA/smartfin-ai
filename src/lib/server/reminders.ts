@@ -1,10 +1,13 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { localDate } from "@/lib/finance/dates";
+import { localDate, presetRange } from "@/lib/finance/dates";
 import { formatMoney } from "@/lib/finance/money";
 import { bankClosed, upcomingHolidays } from "@/lib/finance/holidays";
 import { loanStatus } from "@/lib/finance/loans";
-import { notifyOnce } from "./notify";
+import { notify, notifyOnce } from "./notify";
+import { loadDaily } from "./daily";
+import { morningMessage, nightMessage } from "@/lib/finance/daily";
+import { formatInTimeZone } from "date-fns-tz";
 import { memo } from "./memo";
 
 const dayDiff = (a: string, b: string) => Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86_400_000);
@@ -20,6 +23,19 @@ export function runReminders(sb: SupabaseClient, userId: string, tz: string, cur
     try {
       const today = localDate(new Date(), tz); const m = (v: number) => formatMoney(v, currency);
       await notifyOnce(userId, "welcome", "Welcome to SmartFin AI", "Add an expense, set a budget and create a goal — your insights build up from there. Try pasting a bank SMS into Add expense.", 3650);
+      // Daily budget flow: a morning message with today's allowance (from 5am) and a night verdict (from 8pm), once per day each.
+      const hour = Number(formatInTimeZone(new Date(), tz, "H"));
+      if (hour >= 5) {
+        const d = await loadDaily(sb, tz).catch(() => null);
+        if (d) {
+          const mo = morningMessage(m(d.status.allowanceMinor)); await notifyOnce(userId, "daily", `${mo.title} (${nice(today)})`, mo.body, 1);
+          if (hour >= 20) { // one verdict per local day, even if more spends are added later (its title carries amounts, so notifyOnce can't dedupe it)
+            const since = presetRange("today", new Date(), tz).start.toISOString();
+            const { data: sent } = await sb.from("notifications").select("id").eq("kind", "daily_night").gte("created_at", since).limit(1);
+            if (!sent?.length) { const n = nightMessage(d.status, m); await notify(userId, "daily_night", n.title, n.body); }
+          }
+        }
+      }
       const [rules, drafts, goals, loans, loanPays] = await Promise.all([
         sb.from("recurring_rules").select("name,estimated_amount_minor,next_due_date").eq("paused", false),
         sb.from("transaction_drafts").select("name,merchant,planned_for").not("planned_for", "is", null).lte("planned_for", today),

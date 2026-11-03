@@ -1,5 +1,3 @@
-import { AuthForm } from "@/components/auth-form";
-import { GoogleButton } from "@/components/google-button";
-import { register } from "@/app/actions/auth";
+import { RegisterBody } from "@/components/auth-bodies";
 export const metadata = { title: "Create account" };
-export default function Page() { return <><AuthForm mode="register" action={register} /><GoogleButton /></>; }
+export default function Page() { return <RegisterBody />; }

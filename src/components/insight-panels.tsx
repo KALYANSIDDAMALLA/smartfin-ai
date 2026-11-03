@@ -100,7 +100,7 @@ export function WeekdayBars({ a, fmt }: { a: Analysis; fmt: Fmt }) {
       {!a.weekday.length ? <p className="text-sm text-muted">Needs at least a week of data.</p> : (
         <div className="flex h-40 items-end gap-2" role="img" aria-label="Average spending by weekday">{a.weekday.map((w) => (
           <div key={w.label} className="flex h-full flex-1 flex-col items-center justify-end gap-1" title={`${w.label}: ${fmt(w.avgMinor)} on average`}>
-            <span className="tabnum text-[10px] text-muted">{w.avgMinor ? fmt(w.avgMinor).replace(/\.\d+$/, "") : ""}</span>
+            <span className="tabnum text-[11px] text-muted">{w.avgMinor ? fmt(w.avgMinor).replace(/\.\d+$/, "") : ""}</span>
             <div className={cn("w-full rounded-t-lg", w.label === a.peakWeekday ? "bg-gradient-to-t from-rose-500 to-orange-400 shadow-[0_0_14px_rgba(244,63,94,0.5)]" : "bg-gradient-to-t from-indigo-500/80 to-sky-400/80")} style={{ height: `${Math.max(3, (w.avgMinor / max) * 100)}%` }} />
             <span className="text-xs font-medium">{w.label}</span></div>))}</div>)}
     </Section>

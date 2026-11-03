@@ -1,49 +1,16 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { AuthNav } from "@/components/auth-nav";
-import { AuthTabs } from "@/components/auth-tabs";
-import { AssistantShowcase } from "@/components/assistant-showcase";
-import { BarChart3, Check, Lock, ShieldCheck, Sparkles } from "lucide-react";
+import { AuthCard } from "@/components/auth-card";
 
-const POINTS = [
-  [BarChart3, "See every rupee", "Income, spending and budgets in one accurate place."],
-  [Sparkles, "AI-assisted insights", "Clear explanations built on numbers the app verifies."],
-  [ShieldCheck, "Private by design", "Your records are isolated at the database level."],
-] as const;
-
+/** One centred form on a soft gradient colour (no picture, no side panel). */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid min-h-dvh lg:h-dvh lg:grid-cols-[1fr_1.1fr]">
-      {/* Same full-page picture as the home page (light and dark versions); the indigo panel on the left covers its left half. */}
-      <div aria-hidden className="home-art" />
-      <aside className="glass-indigo relative hidden overflow-hidden text-white lg:flex lg:flex-col lg:justify-between lg:p-10">
-        <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-black/10" />
-        <Link href="/" aria-label="SmartFin AI home" className="relative"><Logo size={34} textClassName="text-xl" /></Link>
-        <div className="relative grid max-w-md gap-6">
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight xl:text-4xl">Track every rupee. Plan every goal.</h2>
-          <div className="[@media(max-height:690px)]:hidden"><AssistantShowcase compact /></div>
-          <ul className="grid gap-4 [@media(max-height:900px)]:hidden">{POINTS.map(([I, t, d]) => (
-            <li key={t} className="flex gap-4"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white/15"><I size={20} aria-hidden /></span>
-              <div><p className="font-medium">{t}</p><p className="text-sm opacity-85">{d}</p></div></li>))}</ul>
-        </div>
-        <p className="relative flex items-center gap-2 text-sm opacity-85"><Check size={16} aria-hidden />Email-verified accounts · Export or delete your data anytime</p>
-      </aside>
-
-      <main className="flex flex-col px-4 py-4 sm:px-8 lg:overflow-y-auto">
-        {/* my-auto centres the form when it fits, and collapses to 0 when it does not, so the top (Back/Home) is never pushed out of reach as `justify-center` would */}
-        <div className="mx-auto my-auto w-full max-w-lg">
-          <AuthNav />
-          <Link href="/" aria-label="SmartFin AI home" className="mb-3 flex justify-center text-brand lg:hidden"><Logo /></Link>
-          {/* Solid white card (not see-through glass), so the background picture never tints the form. */}
-          <div className="rounded-2xl border border-line bg-surface p-4 shadow-xl shadow-indigo-900/10 sm:p-5"><AuthTabs />{children}</div>
-          {/* The small print sits on a frosted panel so it stays readable over the background picture. */}
-          <div className="mt-3 rounded-xl border border-line bg-surface px-4 py-3 shadow-md shadow-indigo-900/5">
-            <p className="flex items-center justify-center gap-1.5 text-xs text-muted"><Lock size={12} aria-hidden />Your data is private to you and protected by row-level security.</p>
-            <p className="mt-2 text-center text-xs text-muted [@media(max-height:700px)]:hidden">SmartFin AI tracks and analyses your finances. It is not a bank, wallet or payment service and never moves money.</p>
-            <p className="mt-2 text-center text-xs text-muted [@media(max-height:700px)]:hidden"><Link href="/privacy" className="underline">Privacy</Link> · <Link href="/terms" className="underline">Terms</Link> · <Link href="/contact" className="underline">Contact us</Link></p>
-          </div>
-        </div>
+    <div className="min-h-dvh bg-[linear-gradient(135deg,#c7d2fe,#ddd6fe_50%,#fbcfe8)] dark:bg-[linear-gradient(135deg,#0b0d2a,#16124a_55%,#2a1458)]">
+      <AuthNav />
+      <main className="flex min-h-dvh flex-col items-center justify-center px-4 pb-14 pt-16 sm:px-8 sm:pt-14 [@media(min-width:640px)_and_(max-height:900px)]:py-6">
+        <Link href="/" aria-label="SmartFin AI home" className="mb-3 text-brand"><Logo size={30} textClassName="text-xl" /></Link>
+        <AuthCard>{children}</AuthCard>
       </main>
     </div>
   );

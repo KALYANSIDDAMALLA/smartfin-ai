@@ -9,6 +9,8 @@ import { quickInsights } from "@/lib/finance/automation";
 import { pctText } from "@/lib/finance/pct";
 import { isFlexible } from "@/lib/finance/coach";
 import { Sparkles } from "lucide-react";
+import { loadDaily } from "@/lib/server/daily";
+import { daysInMonthOf } from "@/lib/finance/daily";
 import { formatMoney } from "@/lib/finance/money";
 import { Badge, Card, EmptyState, PageHeader, Table, Td, Th } from "@/components/ui";
 import { DonutChart } from "@/components/charts-lazy";
@@ -32,10 +34,11 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const { supabase, profile } = await requireUser();
   const { key, range, prev, prevLike } = resolveRange(sp, profile.timezone);
   // Only the selected + previous period is loaded; the recent list and the "has any data" check run in parallel.
-  const [{ txs, lookups }, recentRes, countRes] = await Promise.all([
+  const [{ txs, lookups }, recentRes, countRes, daily] = await Promise.all([
     loadTxs(supabase, undefined, prev.start, range.end),
     supabase.from("transactions").select("id,name,merchant,type,amount_minor,occurred_at").is("deleted_at", null).order("occurred_at", { ascending: false }).limit(8),
     supabase.from("transactions").select("id", { count: "exact", head: true }).is("deleted_at", null),
+    loadDaily(supabase, profile.timezone).catch(() => null),
   ]);
   const cur: Summary = summarize(txs, range), old: Summary = summarize(txs, prevLike);
   const catName = (id: string) => lookups.categories.find((c) => c.id === id)?.name ?? "Uncategorised";
@@ -72,6 +75,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               </span>
             </div>
           )}
+          {daily && (() => { const s = daily.status; const bar = s.state === "over" ? "bg-bad" : s.state === "close" ? "bg-amber-500" : "bg-good";
+            return <Card className="border-brand/30"><div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-sm text-muted">Today&apos;s budget · {m(daily.incomeMinor)} a month ÷ {daysInMonthOf(daily.today)} days</p>
+              <p className={`tabnum mt-1 text-3xl font-semibold ${s.state === "over" ? "text-bad" : ""}`}>{s.state === "over" ? `−${m(-s.leftMinor)}` : m(s.leftMinor)}<span className="ml-2 text-sm font-normal text-muted">{s.state === "over" ? "over today's budget" : "left today"}</span></p></div>
+              <p className="tabnum text-sm text-muted">Spent {m(s.spentMinor)} of {m(s.allowanceMinor)}</p></div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface2" role="progressbar" aria-valuenow={Math.min(100, s.usedPct)} aria-valuemin={0} aria-valuemax={100} aria-label="Share of today's budget spent"><div className={`h-full rounded-full ${bar}`} style={{ width: `${Math.min(100, s.usedPct)}%` }} /></div>
+              <p className="mt-2 text-xs text-muted">{s.state === "fresh" ? "No spends yet today. Easy." : s.state === "over" ? "Over budget today — tomorrow is a fresh start." : s.state === "close" ? "Almost at today's limit." : "On track."} {daily.source === "recorded" && <>Based on income recorded this month; set your income in <Link href="/savings" className="text-brand">Savings plan</Link> for a steadier number.</>}</p></Card>; })()}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Income" value={m(cur.incomeMinor)} cur={cur.incomeMinor} prev={old.incomeMinor} partial={partial} />
             <Stat label="Net expenses" value={m(cur.netExpenseMinor)} cur={cur.netExpenseMinor} prev={old.netExpenseMinor} partial={partial} goodWhenUp={false} />

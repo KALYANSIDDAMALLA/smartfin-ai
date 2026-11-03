@@ -110,8 +110,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
               {selBank.closed && <li className="flex items-center gap-2 rounded-lg border border-line/70 px-3 py-2 text-sm"><Landmark size={15} className="text-muted" aria-hidden />Banks closed <span className="text-muted">· {selBank.reason}</span></li>}
             </ul>}
             <div className="mt-3 flex flex-wrap gap-2">
-              <Link href={`/expenses/new?date=${c.sel}`} className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-brandfg">Add expense</Link>
-              <Link href={`/income?date=${c.sel}`} className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium hover:bg-surface2/60">Add income</Link>
+              <Link href={`/expenses/new?date=${c.sel}`} className="rounded-lg bg-brand px-3 py-2.5 text-xs font-medium text-brandfg sm:py-1.5">Add expense</Link>
+              <Link href={`/income?date=${c.sel}`} className="rounded-lg border border-line px-3 py-2.5 text-xs font-medium hover:bg-surface2/60 sm:py-1.5">Add income</Link>
             </div>
             <p className="mt-3 flex items-start gap-2 rounded-lg bg-surface2/50 px-3 py-2 text-xs text-muted"><History size={14} className="mt-0.5 shrink-0" aria-hidden /><span><b className="text-fg">On this day last year</b> ({formatYmd(c.lastYear.date)}): {c.lastYear.totals ? <>spent <b className="text-fg">{m(c.lastYear.totals.expenseMinor)}</b>, income <b className="text-good">{m(c.lastYear.totals.incomeMinor)}</b> · {c.lastYear.totals.count} transaction{c.lastYear.totals.count === 1 ? "" : "s"}</> : "nothing recorded."}</span></p>
             {dayEvents.length > 0 && <><h3 className="mb-1 mt-4 text-xs font-medium uppercase tracking-wide text-muted">Due & planned</h3><ul className="grid gap-1.5">{dayEvents.map((e, i) => <EventRow key={i} e={e} m={m} />)}</ul></>}

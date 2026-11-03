@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/server/auth";
 import { getPlan } from "@/lib/server/billing";
 import { Badge } from "@/components/ui";
 import { saveSettings, saveNotificationPrefs } from "@/app/actions/plan";
+import { ChangePasswordForm } from "@/components/change-password-form";
 import { DeleteAccount } from "@/components/delete-account";
 import { AvatarUploader } from "@/components/avatar-uploader";
 import { ProfileDetailsForm } from "@/components/profile-details-form";
@@ -24,6 +25,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
     supabase.auth.getUser(), // fresh user record: the JWT can lag behind just-saved profile details
   ]);
   const plan = await getPlan(supabase, user.id);
+  const hasPassword = ((ud?.user?.app_metadata?.providers as string[] | undefined) ?? []).includes("email");
   const initial = (profile.display_name ?? user.email ?? "U").slice(0, 1).toUpperCase();
   return (
     <>
@@ -49,6 +51,9 @@ export default async function Settings({ searchParams }: { searchParams: Promise
             <fieldset className="grid gap-2"><legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Delivery</legend>
               <div className="grid gap-2 sm:grid-cols-2"><Check name="email" label="Email" hint="Needs an email provider — not active yet" on={pref?.email_notifications} /><Check name="push" label="Browser push" hint="Not active yet" on={pref?.push_notifications} /></div></fieldset>
           </div></ActionForm></Card>
+        <Card id="change-password" className="scroll-mt-24 lg:col-span-2"><h2 className="font-medium">Change password</h2>
+          <p className="mb-3 mt-0.5 text-sm text-muted">{hasPassword ? "Enter your current password, then choose a new one (at least 8 characters)." : "You signed in with Google, so you don't have a password yet. Set one to also log in with your email."}</p>
+          <ChangePasswordForm hasPassword={hasPassword} /></Card>
         <Card className="border-bad/30 lg:col-span-2"><div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-center lg:gap-10">
           <div><h2 className="font-medium text-bad">Delete account</h2><p className="mt-1 text-sm text-muted">Deletes your profile and all records permanently. This cannot be undone.</p>
             <p className="mt-4 text-xs text-muted"><Link href="/privacy" className="underline">Privacy policy</Link> · <Link href="/terms" className="underline">Terms</Link> · <Link href="/contact" className="underline">Contact</Link></p></div>

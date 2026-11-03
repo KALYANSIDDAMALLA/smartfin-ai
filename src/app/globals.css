@@ -163,3 +163,11 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   /* Expandable rows ("Edit", "Repayment schedule", FAQs) get a taller tap row. */
   summary { padding-block: .5rem; }
 }
+
+/* ---- Phones ---- */
+/* iOS Safari zooms the whole page when you tap a text box whose font is under 16px; 16px on small screens stops that. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]), select, textarea { font-size: 16px; }
+}
+/* Bigger check boxes and radio buttons on touch screens (the label around them is already tappable). */
+@media (pointer: coarse) { input[type="checkbox"], input[type="radio"] { width: 1.25rem; height: 1.25rem; } }

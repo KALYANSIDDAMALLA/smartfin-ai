@@ -61,7 +61,7 @@ export default async function Transactions({ searchParams }: { searchParams: Pro
               <Td className="hidden md:table-cell">{catName(r.category_id)}</Td><Td className="hidden md:table-cell">{methodName(r.payment_method_id)}</Td>
               <Td className="hidden md:table-cell"><TypeBadge type={r.type} /></Td>
               <Td className={`tabnum text-right ${plus ? "text-good" : ""}`}>{plus ? "+" : ""}{formatMoney(Number(r.amount_minor), profile.currency)}</Td>
-              <Td><ConfirmAction action={deleteTransaction} fields={{ id: r.id }} label={`Delete ${r.name ?? "transaction"}`} confirm={`${r.name ?? r.merchant ? `Delete “${r.name ?? r.merchant}” (${formatMoney(Number(r.amount_minor), profile.currency)})?` : `Delete this ${formatMoney(Number(r.amount_minor), profile.currency)} ${r.type}?`} It will no longer count in your totals.`} success="Transaction deleted.">Delete</ConfirmAction></Td>
+              <Td className="whitespace-nowrap"><ConfirmAction action={deleteTransaction} fields={{ id: r.id }} label={`Delete ${r.name ?? "transaction"}`} confirm={`${r.name ?? r.merchant ? `Delete “${r.name ?? r.merchant}” (${formatMoney(Number(r.amount_minor), profile.currency)})?` : `Delete this ${formatMoney(Number(r.amount_minor), profile.currency)} ${r.type}?`} It will no longer count in your totals.`} success="Transaction deleted.">Delete</ConfirmAction></Td>
             </tr>); })}
         </tbody></Table>
       )}

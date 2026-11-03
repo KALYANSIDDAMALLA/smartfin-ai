@@ -27,7 +27,7 @@ export function HomeHighlights() {
           <h3 className="mt-4 font-semibold">A calendar that knows Indian holidays</h3>
           <p className="mt-1 text-sm text-muted">Festivals, government holidays and bank closures sit beside your spending and due dates, so a bill never lands on a closed day unnoticed.</p>
           <div aria-hidden className="mt-auto pt-4"><div className="rounded-xl bg-surface2/60 p-3 text-xs">
-            <div className="grid grid-cols-7 gap-1 text-center text-[10px]">
+            <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
               {days.map(([d, n, c]) => (
                 <div key={n} className={`rounded-lg border px-0.5 py-1.5 ${d === "Sun" ? "border-line/70 bg-surface2" : "border-line/60 bg-surface"}`}><p className="text-muted">{d}</p><p className="text-sm font-semibold">{n}</p>
                   <span className={`mx-auto mt-1 block h-1.5 w-1.5 rounded-full ${c ?? "bg-transparent"}`} /></div>))}

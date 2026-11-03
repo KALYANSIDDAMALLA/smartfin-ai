@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Banknote, CalendarDays, FileClock, Hand, Landmark, PiggyBank, Repeat, Sparkles, Target, TriangleAlert, Upload, Wallet, Undo2, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, Banknote, CalendarDays, FileClock, Hand, Landmark, PiggyBank, Repeat, Sparkles, Sun, Moon, Target, TriangleAlert, Upload, Wallet, Undo2, type LucideIcon } from "lucide-react";
 import { requireUser } from "@/lib/server/auth";
 import { markNotificationsRead } from "@/app/actions/plan";
 import { ActionForm } from "@/components/action-form";
@@ -15,6 +15,8 @@ const KINDS: Record<string, { label: string; icon: LucideIcon; tone: string; hre
   refund: { label: "Refunds", icon: Undo2, tone: "bg-sky-500/15 text-sky-600 dark:text-sky-300", href: "/transactions" },
   unusual: { label: "Spending alerts", icon: TriangleAlert, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-300", href: "/transactions" },
   loan: { label: "Loans", icon: Landmark, tone: "bg-sky-500/15 text-sky-600 dark:text-sky-300", href: "/repayments" },
+  daily: { label: "Daily budget", icon: Sun, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-300", href: "/dashboard" },
+  daily_night: { label: "Daily verdict", icon: Moon, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300", href: "/dashboard" },
   recurring: { label: "Bills & reminders", icon: Repeat, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-300", href: "/repayments" },
   draft: { label: "Drafts", icon: FileClock, tone: "bg-violet-500/15 text-violet-600 dark:text-violet-300", href: "/calendar" },
   calendar: { label: "Calendar", icon: CalendarDays, tone: "bg-orange-500/15 text-orange-600 dark:text-orange-300", href: "/calendar" },
@@ -32,7 +34,7 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
   const all = data ?? []; const unread = all.filter((n) => !n.read_at).length;
   const counts = all.reduce<Record<string, number>>((m, n) => ((m[n.kind] = (m[n.kind] ?? 0) + 1), m), {});
   const list = kind && counts[kind] ? all.filter((n) => n.kind === kind) : all;
-  const chip = (active: boolean) => cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition", active ? "border-brand bg-brand text-brandfg" : "border-line bg-surface/70 hover:border-brand/50");
+  const chip = (active: boolean) => cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm transition sm:py-1", active ? "border-brand bg-brand text-brandfg" : "border-line bg-surface/70 hover:border-brand/50");
   return (
     <>
       <PageHeader title="Notifications" desc={<SummaryLine pill={unread ? <><span className="tabnum">{unread}</span> unread</> : "All caught up"} items={[`${all.length} in total`, !!kind && !!counts[kind] && `showing ${(KINDS[kind] ?? FALLBACK).label}`, { t: "budgets, bills, goals, drafts and festivals", small: true }]} />} action={unread > 0 ? <ActionForm action={markNotificationsRead} submit="Mark all read" variant="outline" /> : undefined} />

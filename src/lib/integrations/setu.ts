@@ -31,7 +31,7 @@ export interface SetuSession { id: string; status: "PENDING" | "PARTIAL" | "COMP
 export const createConsent = (p: { vua: string; from: Date; to: Date; months: number }) =>
   call<SetuConsent>("POST", "/consents", {
     consentDuration: { unit: "MONTH", value: String(p.months) }, vua: p.vua,
-    dataRange: { from: p.from.toISOString(), to: p.to.toISOString() }, context: [], additionalParams: { tags: ["smartfin"] },
+    dataRange: { from: p.from.toISOString(), to: p.to.toISOString() }, context: [],
   });
 export const getConsent = (id: string) => call<SetuConsent>("GET", `/consents/${encodeURIComponent(id)}?expanded=true`);
 export const revokeConsent = (id: string) => call<{ status: string }>("POST", `/consents/${encodeURIComponent(id)}/revoke`);

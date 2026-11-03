@@ -11,8 +11,8 @@ export default function Contact() {
     <dl className="mt-6 grid gap-3">
       {name && <div><dt className="font-medium">Name</dt><dd>{name}</dd></div>}
       {role && <div><dt className="font-medium">Profession</dt><dd>{role}</dd></div>}
-      {email && <div><dt className="font-medium">Email</dt><dd><a href={`mailto:${email}`} className="text-brand underline">{email}</a></dd></div>}
-      {phone && <div><dt className="font-medium">Phone</dt><dd><a href={`tel:${phone.replace(/[^+\d]/g, "")}`} className="text-brand underline">{phone}</a></dd></div>}
+      {email && <div><dt className="font-medium">Email</dt><dd><a href={`mailto:${email}`} className="inline-block py-1.5 text-brand underline">{email}</a></dd></div>}
+      {phone && <div><dt className="font-medium">Phone</dt><dd><a href={`tel:${phone.replace(/[^+\d]/g, "")}`} className="inline-block py-1.5 text-brand underline">{phone}</a></dd></div>}
       {address && <div><dt className="font-medium">Address</dt><dd>{address}</dd></div>}
     </dl>
     <h2 className="mt-6 font-medium">What to include</h2><p>Tell us what you were doing and what you saw, and the email you signed up with. We aim to reply within 2 working days.</p></main>);
