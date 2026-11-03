@@ -133,7 +133,7 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 @media (prefers-reduced-motion: reduce) { .ping-soft, .btn-shine::after { animation: none; transition: none; } .icon-btn:hover, .glow:hover, .avatar-ring:hover { transform: none; } }
 
 /* ---- Landing page backdrop: a full-page picture in place of the pale glass backdrop (home page only; light and dark versions) ---- */
-.home-art { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: #e3e7f6 url(/home-bg.svg) center bottom / cover no-repeat; }
+.home-art { position: sticky; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; margin-bottom: -100vh; margin-bottom: -100lvh; z-index: -1; pointer-events: none; background: #e3e7f6 url(/home-bg.svg) center bottom / cover no-repeat; }
 .dark .home-art { background-color: #05060f; background-image: url(/home-bg-dark.svg); }
 
 /* Deep indigo glass, used by the home hero's sister panels (call-to-action banner, login/sign-up side panel): translucent, blurred, with a light top edge. */
@@ -176,6 +176,13 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
    Safari on iPhone shrinks and grows the visible screen as its address bar slides away. A background pinned with `inset: 0` follows that, so
    `cover` re-scales the picture (it looks like zooming in and out). Giving the pinned layers the LARGE viewport height (100lvh, with 100vh as the
    fallback, which iPhone also treats as the large height) keeps their size fixed, so nothing re-scales. */
-.home-art, .home-coins, body::before, body::after { bottom: auto; height: 100vh; height: 100lvh; transform: translateZ(0); }
+.home-coins, body::before, body::after { bottom: auto; height: 100vh; height: 100lvh; transform: translateZ(0); }
 /* The slow "breathing" zoom of the colour glow is turned off on phones and tablets (touch screens): it looked like the page zooming, and it costs battery. */
 @media (pointer: coarse) { body::before { animation: none; will-change: auto; } }
+
+/* Home page background: a "sticky" layer (the browser moves it together with scrolling) instead of a "fixed" one. iPhone Safari lets fixed layers
+   shift up and down while its toolbar slides in and out; sticky ones stay put. The home picture covers the page glow and dot grid completely, so
+   those pinned layers are not drawn there (one less thing that could move out of step with it). */
+body:has(.home-art)::before, body:has(.home-art)::after { display: none; }
+/* No endless floating on touch screens: cards that drift up and down by themselves read as the page moving. */
+@media (pointer: coarse) { .float-slow { animation: none; } }
