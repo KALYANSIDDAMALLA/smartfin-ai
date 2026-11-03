@@ -125,7 +125,7 @@ export function AppShell({ children, name, unread, avatarUrl, searchCtx, timezon
             <div className="hidden md:block"><LiveClock timezone={timezone} /></div></div>
           <GlobalSearch ctx={searchCtx} className="mx-auto w-full min-w-0 max-w-lg 2xl:max-w-none" />
           <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
-            <div className="hidden sm:block"><CalculatorButton /></div>
+            <div className="max-[339px]:hidden"><CalculatorButton /></div>
             <button type="button" aria-label="Toggle theme" data-tip="Switch theme" className="icon-btn" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}><Sun size={18} className="hidden dark:block" /><Moon size={18} className="dark:hidden" /></button>
             <Link href="/notifications" aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`} data-tip={unread ? `${unread} unread` : "Notifications"} className="icon-btn"><Bell size={18} />
               {unread > 0 && <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center"><span className="ping-soft absolute inline-flex h-full w-full rounded-full bg-bad/60" aria-hidden /><span className="relative grid h-[18px] min-w-[18px] place-items-center rounded-full bg-bad px-1 text-[11px] font-semibold text-white">{unread > 999 ? "999+" : unread}</span></span>}</Link>

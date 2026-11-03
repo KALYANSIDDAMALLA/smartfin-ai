@@ -43,7 +43,7 @@ export function CalculatorButton() {
     <div className="relative" ref={box}>
       <button type="button" aria-label="Calculator" aria-expanded={open} data-tip="Calculator" className="icon-btn" onClick={() => setOpen((o) => !o)}><CalcIcon size={18} /></button>
       {open && (
-        <div role="dialog" aria-label="Calculator" className="pop fixed right-3 top-[4.75rem] z-50 w-[min(94vw,19rem)] rounded-2xl p-3 sm:absolute sm:right-0 sm:top-full sm:mt-2">
+        <div role="dialog" aria-label="Calculator" className="pop fixed right-3 top-[4.75rem] z-50 w-[min(calc(100vw-2.5rem),19rem)] rounded-2xl p-3 sm:absolute sm:right-0 sm:top-full sm:mt-2">
           <div className="mb-2 flex items-center justify-between"><div role="tablist" aria-label="Calculator type" className="flex flex-1 gap-1 rounded-xl bg-surface2/50 p-1">{tabBtn("basic", "Basic")}{tabBtn("emi", "Loan EMI")}{tabBtn("gst", "GST")}</div>
             <button type="button" aria-label="Close calculator" onClick={() => setOpen(false)} className="ml-2 rounded-lg p-1.5 hover:bg-surface2/60"><X size={16} /></button></div>
 
