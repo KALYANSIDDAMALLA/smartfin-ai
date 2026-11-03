@@ -171,3 +171,11 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 }
 /* Bigger check boxes and radio buttons on touch screens (the label around them is already tappable). */
 @media (pointer: coarse) { input[type="checkbox"], input[type="radio"] { width: 1.25rem; height: 1.25rem; } }
+
+/* ---- Pinned backgrounds that must not resize while you scroll on a phone ----
+   Safari on iPhone shrinks and grows the visible screen as its address bar slides away. A background pinned with `inset: 0` follows that, so
+   `cover` re-scales the picture (it looks like zooming in and out). Giving the pinned layers the LARGE viewport height (100lvh, with 100vh as the
+   fallback, which iPhone also treats as the large height) keeps their size fixed, so nothing re-scales. */
+.home-art, .home-coins, body::before, body::after { bottom: auto; height: 100vh; height: 100lvh; transform: translateZ(0); }
+/* The slow "breathing" zoom of the colour glow is turned off on phones and tablets (touch screens): it looked like the page zooming, and it costs battery. */
+@media (pointer: coarse) { body::before { animation: none; will-change: auto; } }
