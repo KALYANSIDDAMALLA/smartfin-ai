@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   // staleTimes: pages you just visited (or hovered a link to) are reused for a short time, so clicking back and forth is instant. Saving anything clears it.
   experimental: { optimizePackageImports: ["lucide-react", "recharts", "date-fns"], staleTimes: { dynamic: 30, static: 60 } },
   reactCompiler: true,
-  serverExternalPackages: ["pdfkit", "pdf-parse"],
+  serverExternalPackages: ["pdfkit", "pdf-parse", "razorpay"],
   async redirects() { return [{ source: "/recurring", destination: "/repayments", permanent: true }]; }, // renamed: old bookmarks and links keep working
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];

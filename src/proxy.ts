@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/auth", "/privacy", "/terms", "/contact", "/api-docs", "/openapi.yaml"];
+const PUBLIC = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/auth", "/privacy", "/terms", "/contact", "/api-docs", "/openapi.yaml", "/api/webhooks"]; // /api/webhooks: Razorpay calls it without a login; the route checks the signature itself
 const isPublic = (p: string) => PUBLIC.some((x) => p === x || (x !== "/" && p.startsWith(x + "/")));
 
 export async function proxy(request: NextRequest) {

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/server/auth";
+import { getPlan } from "@/lib/server/billing";
+import { Badge } from "@/components/ui";
 import { saveSettings, saveNotificationPrefs } from "@/app/actions/plan";
 import { DeleteAccount } from "@/components/delete-account";
 import { AvatarUploader } from "@/components/avatar-uploader";
@@ -21,6 +23,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
     profile.avatar_path ? supabase.storage.from("private-files").createSignedUrl(profile.avatar_path, 3600) : Promise.resolve(null),
     supabase.auth.getUser(), // fresh user record: the JWT can lag behind just-saved profile details
   ]);
+  const plan = await getPlan(supabase, user.id);
   const initial = (profile.display_name ?? user.email ?? "U").slice(0, 1).toUpperCase();
   return (
     <>
@@ -31,6 +34,9 @@ export default async function Settings({ searchParams }: { searchParams: Promise
           <div className="lg:border-l lg:border-line/70 lg:pl-12"><h2 className="mb-3 font-medium">About you</h2>
             <ProfileDetailsForm fullName={profile.display_name ?? String(ud?.user?.user_metadata?.full_name ?? "")} profession={String(ud?.user?.user_metadata?.profession ?? "")} /></div>
         </div></Card>
+        <Card className="lg:col-span-2"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="flex items-center gap-2 font-medium">Your plan <Badge tone={plan.plan === "pro" ? "good" : "neutral"}>{plan.plan === "pro" ? "Pro" : "Free"}</Badge></h2>
+          <p className="mt-0.5 text-sm text-muted">{plan.plan === "pro" && plan.proUntil ? `Pro is active until ${new Date(plan.proUntil).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.` : "You have every feature for free today."}</p></div>
+          <Link href="/pricing" className="inline-flex h-9 items-center rounded-lg border border-line px-3 text-sm font-medium hover:bg-surface2/60">See plans</Link></div></Card>
         <Card className="flex flex-col"><h2 className="mb-3 font-medium">Profile</h2><ActionForm stretch action={saveSettings} submit="Save settings"><div className="grid gap-3">
           <Field label="Email"><Input value={user.email ?? ""} disabled readOnly /></Field>
           <Field label="Currency" hint="INR only for now; the data model supports more."><Select name="currency" defaultValue="INR"><option value="INR">INR (₹)</option></Select></Field>
