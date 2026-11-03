@@ -10,6 +10,7 @@ import { markRecurringPaid } from "@/app/actions/transactions";
 import { ActionForm } from "@/components/action-form";
 import { Badge, Card, EmptyState, Field, Input, PageHeader, Select } from "@/components/ui";
 import { NumInput } from "@/components/num-input";
+import { DateBox } from "@/components/date-box";
 import { LoansSection } from "@/components/loans-section";import { SummaryLine } from "@/components/summary-line";
 
 function Fields({ cats, methods, r }: { cats: { id: string; name: string; kind: string }[]; methods: { id: string; label: string }[]; r?: Record<string, any> }) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -19,7 +20,7 @@ function Fields({ cats, methods, r }: { cats: { id: string; name: string; kind: 
     <Field label="Type"><Select name="txType" defaultValue={r?.tx_type ?? "expense"}><option value="expense">Expense</option><option value="income">Income</option></Select></Field>
     <Field label="Estimated amount (₹)"><NumInput name="amount" required defaultValue={r ? String(Number(r.estimated_amount_minor) / 100) : ""} /></Field>
     <Field label="Frequency"><Select name="frequency" defaultValue={r?.frequency ?? "monthly"}>{["daily", "weekly", "monthly", "quarterly", "yearly"].map((f) => <option key={f}>{f}</option>)}</Select></Field>
-    <Field label="Next due"><Input name="nextDue" type="date" required defaultValue={r?.next_due_date} /></Field>
+    <Field label="Next due"><DateBox name="nextDue" label="Next due" required defaultValue={r?.next_due_date} /></Field>
     <Field label="Category"><Select kind="category" name="categoryId" defaultValue={r?.category_id ?? ""}><option value="">—</option>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>
     <Field label="Payment method"><Select kind="method" name="paymentMethodId" defaultValue={r?.payment_method_id ?? ""}><option value="">—</option>{methods.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}</Select></Field>
   </div>);

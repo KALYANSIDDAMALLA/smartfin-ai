@@ -22,7 +22,7 @@ export function RangeFilter({ base, sp, active }: { base: string; sp: SP; active
         <DateBox name="from" label="From" defaultValue={sp.from} required className="sm:w-40" />
         <span className="hidden text-muted sm:inline">to</span>
         <DateBox name="to" label="To" defaultValue={sp.to} required className="sm:w-40" />
-        <button className="col-span-2 h-11 rounded-lg border border-line bg-surface px-3 hover:bg-surface2 sm:col-span-1 sm:h-9">Apply custom range</button>
+        <button className="col-span-2 h-11 rounded-lg border border-line bg-surface px-3 hover:bg-surface2 sm:col-span-1 sm:h-10">Apply custom range</button>
       </form>
     </div>
   );

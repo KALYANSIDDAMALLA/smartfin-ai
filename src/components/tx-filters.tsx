@@ -5,6 +5,7 @@ import { Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 import { Select } from "./select";
 import { NumInput } from "./num-input";
 import { cn } from "./ui";
+import { DateBox } from "./date-box";
 
 const PRESETS = [["today", "Today"], ["week", "This week"], ["month", "This month"], ["year", "This year"], ["custom", "Custom"]] as const;
 const SORTS: Record<string, string> = { newest: "Newest first", oldest: "Oldest first", high: "Highest amount", low: "Lowest amount" };
@@ -61,6 +62,13 @@ export function TxFilters({ categories, methods, count }: { categories: { id: st
         <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm transition hover:border-brand/50 md:hidden"><SlidersHorizontal size={15} aria-hidden />Filters{chips.length > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-semibold text-brandfg">{chips.length}</span>}</button>
       </div>
 
+      {range === "custom" && <div role="group" aria-label="Custom date range" className="grid gap-1.5">
+        <div className="flex items-center gap-2">
+          <DateBox label="From date" value={get("from")} max={get("to") || undefined} onValueChange={(v) => go({ range: "custom", from: v || null })} className="flex-1 sm:max-w-48" />
+          <span className="text-sm text-muted">to</span>
+          <DateBox label="To date" value={get("to")} min={get("from") || undefined} onValueChange={(v) => go({ range: "custom", to: v || null })} className="flex-1 sm:max-w-48" /></div>
+        {!(get("from") && get("to")) && <p className="text-xs text-muted">Pick a start and an end date to see that period.</p>}</div>}
+
       <div className={cn("grid gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6", !open && "max-md:hidden")}>
         <Select aria-label="Type" value={get("type")} onChange={(e) => go({ type: e.target.value || null })}><option value="">All types</option>{["expense", "income", "refund", "transfer", "adjustment"].map((t) => <option key={t} value={t}>{t}</option>)}</Select>
         <Select kind="category" aria-label="Category" value={get("cat")} onChange={(e) => go({ cat: e.target.value || null })}><option value="">All categories</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select>
@@ -68,10 +76,6 @@ export function TxFilters({ categories, methods, count }: { categories: { id: st
         <Select aria-label="Online or offline" value={get("channel")} onChange={(e) => go({ channel: e.target.value || null })}><option value="">Online & offline</option><option value="online">Online</option><option value="offline">Offline</option></Select>
         <Select aria-label="Sort" value={get("sort") || "newest"} onChange={(e) => go({ sort: e.target.value === "newest" ? null : e.target.value })}>{Object.entries(SORTS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
         <div className="flex items-center gap-1.5"><NumInput value={min} onValueChange={(v) => { setMin(v); later({ min: raw(v) || null }, 500); }} aria-label="Minimum amount" placeholder="Min" className="h-10 text-sm" /><span className="text-muted" aria-hidden>–</span><NumInput value={max} onValueChange={(v) => { setMax(v); later({ max: raw(v) || null }, 500); }} aria-label="Maximum amount" placeholder="Max" className="h-10 text-sm" /></div>
-        {range === "custom" && <div className="flex items-center gap-1.5 sm:col-span-2 md:col-span-3 xl:col-span-6" aria-label="Custom date range">
-          <input type="date" aria-label="From date" value={get("from")} max={get("to") || undefined} onChange={(e) => go({ range: "custom", from: e.target.value || null })} className="h-10 min-w-0 flex-1 rounded-lg border border-line bg-surface/70 px-3 text-sm sm:max-w-48" />
-          <span className="text-sm text-muted">to</span>
-          <input type="date" aria-label="To date" value={get("to")} min={get("from") || undefined} onChange={(e) => go({ range: "custom", to: e.target.value || null })} className="h-10 min-w-0 flex-1 rounded-lg border border-line bg-surface/70 px-3 text-sm sm:max-w-48" /></div>}
       </div>
 
       <div className="flex min-h-6 flex-wrap items-center gap-2 text-sm" aria-live="polite">

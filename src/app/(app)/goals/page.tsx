@@ -6,6 +6,7 @@ import { saveGoal, setGoalStatus, deleteGoal, addContribution } from "@/app/acti
 import { ActionForm } from "@/components/action-form";
 import { Badge, Card, EmptyState, Field, Input, PageHeader, Select, cn } from "@/components/ui";
 import { NumInput } from "@/components/num-input";
+import { DateBox } from "@/components/date-box";
 
 import { SummaryLine } from "@/components/summary-line";
 
@@ -19,7 +20,7 @@ function GoalFields({ g }: { g?: Record<string, any> }) { // eslint-disable-line
     <Field label="Name"><Input name="name" required defaultValue={g?.name} /></Field>
     <Field label="Type"><Select name="kind" defaultValue={g?.kind ?? "custom"}>{KINDS.map((k) => <option key={k} value={k}>{label(k)}</option>)}</Select></Field>
     <Field label="Amount you need (₹)"><NumInput name="target" required defaultValue={g ? String(Number(g.target_minor) / 100) : ""} /></Field>
-    <Field label="Finish by"><Input name="targetDate" type="date" defaultValue={g?.target_date ?? ""} /></Field>
+    <Field label="Finish by"><DateBox name="targetDate" label="Finish by" defaultValue={g?.target_date ?? ""} /></Field>
     <Field label="How often will you save?"><Select name="frequency" defaultValue={g?.contribution_frequency ?? ""}><option value="">—</option>{["daily", "weekly", "monthly", "yearly"].map((f) => <option key={f}>{f}</option>)}</Select></Field>
     <Field label="Why this goal? (optional)"><Input name="description" defaultValue={g?.description ?? ""} /></Field>
   </div>);

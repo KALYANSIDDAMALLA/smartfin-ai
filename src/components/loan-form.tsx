@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ActionForm } from "./action-form";
 import { Field, Input, Select } from "./ui";
 import { NumInput } from "./num-input";
+import { DateBox } from "./date-box";
 import { saveLoan } from "@/app/actions/loans";
 import { computeEmi, schedule } from "@/lib/finance/loans";
 import { formatMoney } from "@/lib/finance/money";
@@ -28,7 +29,7 @@ export function LoanForm({ loan, locked = false, currency = "INR" }: { loan?: Lo
         <Field label="Amount borrowed (₹)"><NumInput name="principal" required value={principal} onValueChange={setPrincipal} disabled={locked} /></Field>
         <Field label="Interest rate (% a year)"><NumInput name="rate" mode="decimal" required value={rate} onValueChange={setRate} placeholder="e.g. 8.5" disabled={locked} /></Field>
         <Field label="Tenure (months)"><NumInput name="tenure" mode="int" required value={tenure} onValueChange={setTenure} placeholder="e.g. 240" disabled={locked} /></Field>
-        <Field label="First EMI date"><Input name="firstDue" type="date" required defaultValue={loan?.first_due_date} disabled={locked} /></Field>
+        <Field label="First EMI date"><DateBox name="firstDue" label="First EMI date" required defaultValue={loan?.first_due_date} disabled={locked} /></Field>
         <Field label="EMI (₹)" hint={autoEmi ? `Leave blank to use ${m(autoEmi)}` : "Optional — calculated if blank"}><NumInput name="emi" value={emi} onValueChange={setEmi} placeholder="Auto" disabled={locked} /></Field>
       </div>
       {locked && <p className="mt-2 text-xs text-muted">The amount, rate and dates are locked because a payment is already recorded. You can still rename the loan.</p>}
