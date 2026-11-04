@@ -2,13 +2,14 @@ import Link from "next/link";
 import { CheckCircle2, KeyRound, Landmark, ShieldCheck, Smartphone } from "lucide-react";
 import { requireUser } from "@/lib/server/auth";
 import { bankLinkingOn } from "@/lib/integrations/setu";
-import { ACCOUNT_TYPES, bankHue } from "@/lib/banks";
+import { ACCOUNT_TYPES } from "@/lib/banks";
 import { formatMoney } from "@/lib/finance/money";
 import { archiveAccount } from "@/app/actions/accounts";
 import { connectDemoBank, disconnectBank, loadDemoTransactions, refreshConnection, syncConnection } from "@/app/actions/integrations";
 import { ActionForm } from "@/components/action-form";
 import { AddAccountForm, BankLinkForm } from "@/components/bank-forms";
 import { AccountBalance } from "@/components/account-balance";
+import { BankMark } from "@/components/bank-mark";
 import { CheckBalance } from "@/components/check-balance";
 import { SummaryLine } from "@/components/summary-line";
 import { Badge, Card, PageHeader } from "@/components/ui";
@@ -52,7 +53,7 @@ export default async function BankLinks() {
 
         {!!conns?.length && <Card><h2 className="mb-3 font-medium">Your linked banks</h2><ul className="grid gap-3">{conns.map((c) => { const meta = (c.meta ?? {}) as Meta; const st = STATUS[c.status] ?? STATUS.error; const bank = meta.bank ?? "Bank account"; return (
           <li key={c.id} className="rounded-xl border border-line bg-surface/60 p-4"><div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white" style={{ background: `hsl(${bankHue(bank)} 60% 45%)` }}><Landmark size={18} aria-hidden /></span>
+            <div className="flex min-w-0 items-center gap-3"><BankMark label={bank} className="h-11 w-11 rounded-xl" iconSize={18} />
               <div className="min-w-0"><p className="truncate font-medium">{bank} <Badge tone={st.tone}>{st.label}</Badge>{meta.demo && <> <Badge tone="info">Demo data</Badge></>}</p>
                 {!!meta.accounts?.length && <p className="text-sm">{meta.accounts.map((a) => `${a.type ?? "Account"} ${a.masked}`).join(" · ")}</p>}
                 <p className="text-xs text-muted">{meta.mobileLast4 ? `Mobile ••••${meta.mobileLast4}` : ""}{c.last_synced_at ? ` · last synced ${new Date(c.last_synced_at).toLocaleString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}` : ""}</p></div></div>
@@ -68,7 +69,7 @@ export default async function BankLinks() {
           <p className="mb-4 text-sm text-muted">Add the accounts you use, even without linking, so you can pick them when you record a transfer between your own accounts.</p>
           {!!nAcc && <ul className="mb-5 grid gap-2 sm:grid-cols-2">{accounts!.map((a) => (
             <li key={a.id} className="rounded-xl border border-line bg-surface/60 px-3 py-2.5"><div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white" style={{ background: `hsl(${bankHue(a.name)} 60% 45%)` }}><Landmark size={16} aria-hidden /></span>
+              <BankMark label={a.name} className="h-9 w-9 rounded-lg" />
               <div className="min-w-0"><p className="truncate text-sm font-medium">{a.name}</p><p className="text-xs text-muted">{a.kind === "bank" ? "Bank account" : a.kind === "credit_card" ? ACCOUNT_TYPES.credit_card : a.kind === "wallet" ? ACCOUNT_TYPES.wallet : a.kind === "cash" ? ACCOUNT_TYPES.cash : "Other"}{Number(a.opening_balance_minor) ? ` · opening ${m(Number(a.opening_balance_minor))}` : ""}</p></div></div>
               <ActionForm action={archiveAccount} compact submit="Remove" variant="ghost" confirm={`Remove “${a.name}” from your list? Past transfers stay.`}><input type="hidden" name="id" value={a.id} /></ActionForm></div>
               <AccountBalance accountId={a.id} currency={profile.currency} timezone={profile.timezone} />

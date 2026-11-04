@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BANKS, accountName, bankById, bankHue, kindOf } from "@/lib/banks";
+import { BANKS, accountName, bankById, bankFromName, bankHue, bankLogoUrl, kindOf } from "@/lib/banks";
 
 describe("bank list", () => {
   it("has unique ids and clear names", () => { expect(new Set(BANKS.map((b) => b.id)).size).toBe(BANKS.length); BANKS.forEach((b) => expect(b.name.length).toBeGreaterThan(2)); });
@@ -15,3 +15,10 @@ describe("account names", () => {
   it("never exceeds 100 characters", () => expect(accountName({ bank: "B".repeat(150), type: "savings" }).length).toBeLessThanOrEqual(100));
 });
 describe("account kinds", () => { it("maps savings and current to bank", () => { expect(kindOf("savings")).toBe("bank"); expect(kindOf("current")).toBe("bank"); expect(kindOf("credit_card")).toBe("credit_card"); expect(kindOf("cash")).toBe("cash"); }); });
+
+describe("bank logos", () => {
+  it("every listed bank except 'Other' has a logo address", () => { for (const b of BANKS.filter((x) => x.id !== "other")) expect(bankLogoUrl(b.id), b.name).toMatch(/^https:\/\/t3\.gstatic\.com\/faviconV2\?.*fallback_opts=TYPE,SIZE,URL.*url=https:\/\/[a-z.]+&size=128$/); });
+  it("'Other bank' has none (it keeps the building icon)", () => expect(bankLogoUrl("other")).toBeUndefined());
+  it("matches a bank from an account label", () => { expect(bankFromName("HDFC Bank ••4321 (Current)")?.id).toBe("hdfc-bank"); expect(bankFromName("state bank of india")?.id).toBe("state-bank-of-india"); });
+  it("does not match nicknames or cash", () => { expect(bankFromName("Salary account")).toBeUndefined(); expect(bankFromName("Cash")).toBeUndefined(); });
+});

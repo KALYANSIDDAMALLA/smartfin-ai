@@ -4,8 +4,19 @@ import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search, type LucideIcon } from "lucide-react";
 import { cn } from "./ui";
 
-export interface Opt { value: string; label: string; sub?: string; icon?: LucideIcon; hue?: number; group?: string }
+export interface Opt { value: string; label: string; sub?: string; icon?: LucideIcon; hue?: number; group?: string; logo?: string }
 const chip = (hue?: number) => (hue == null ? undefined : { background: `hsl(${hue} 80% 55% / .16)`, color: `hsl(${hue} 70% 52%)` });
+
+/** Tile in front of an option: its logo when it has one and the picture loads, otherwise the coloured icon. */
+function OptIcon({ o, box, icon }: { o: Opt; box: string; icon: number }) {
+  const [bad, setBad] = useState(false); const Icon = o.icon;
+  if (o.logo && !bad) return (
+    <span className={cn("grid shrink-0 place-items-center overflow-hidden rounded-md bg-white ring-1 ring-black/10", box)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={o.logo} alt="" width={20} height={20} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setBad(true)} className="h-5 w-5 object-contain" /></span>);
+  if (!Icon) return null;
+  return <span className={cn("grid shrink-0 place-items-center rounded-md", box)} style={chip(o.hue)}><Icon size={icon} aria-hidden /></span>;
+}
 
 /**
  * Accessible custom dropdown (replaces the native <select>): colour-coded icons, optional search, groups, full keyboard control
@@ -57,7 +68,7 @@ export function Dropdown({ name, value, onChange, options, placeholder = "Select
       <button ref={btn} type="button" role="combobox" aria-haspopup="listbox" aria-expanded={open} aria-controls={`${id}-list`} aria-label={ariaLabel} aria-invalid={invalid || undefined}
         onClick={() => (open ? close() : show())} onKeyDown={(e) => { if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); show(); } }}
         className={cn("flex h-10 w-full min-w-0 max-w-full items-center gap-2.5 rounded-lg border border-line bg-surface/70 px-2.5 text-left text-sm backdrop-blur-sm transition", open && "border-brand shadow-[0_0_0_3px_color-mix(in_srgb,var(--brand)_22%,transparent)]", auto && !open && "border-brand/60 bg-brand/5", invalid && "border-bad bg-bad/5")}>
-        {SelIcon && <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md" style={chip(selected?.hue)}><SelIcon size={14} aria-hidden /></span>}
+        {selected && (SelIcon || selected.logo) && <OptIcon key={selected.value} o={selected} box="h-6 w-6" icon={14} />}
         <span className={cn("min-w-0 flex-1 truncate", !selected && "text-muted")}>{selected?.label ?? placeholder}</span>
         <ChevronDown size={16} aria-hidden className={cn("shrink-0 text-muted transition-transform", open && "rotate-180 text-brand")} />
       </button>
@@ -76,7 +87,7 @@ export function Dropdown({ name, value, onChange, options, placeholder = "Select
                 {head && <p className="px-2.5 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted">{head}</p>}
                 <div role="option" data-i={i} aria-selected={isSel} onMouseDown={(e) => { e.preventDefault(); pick(o); }} onMouseEnter={() => setActive(i)}
                   className={cn("flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm", i === active ? "bg-brand/12" : "", isSel && "font-medium text-brand")}>
-                  {Icon && <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md" style={chip(o.hue)}><Icon size={15} aria-hidden /></span>}
+                  {(Icon || o.logo) && <OptIcon o={o} box="h-7 w-7" icon={15} />}
                   <span className="min-w-0 flex-1"><span className="block truncate">{o.label}</span>{o.sub && <span className="block truncate text-xs font-normal text-muted">{o.sub}</span>}</span>
                   {isSel && <Check size={15} aria-hidden className="shrink-0" />}
                 </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Landmark } from "lucide-react";
-import { ACCOUNT_TYPES, BANKS, bankHue, type AccountType } from "@/lib/banks";
+import { ACCOUNT_TYPES, BANKS, bankHue, bankLogoUrl, type AccountType } from "@/lib/banks";
 import { connectBank } from "@/app/actions/integrations";
 import { addBankAccount } from "@/app/actions/accounts";
 import { ActionForm } from "./action-form";
@@ -9,7 +9,7 @@ import { Dropdown, type Opt } from "./dropdown";
 import { NumInput } from "./num-input";
 import { Field, Input, inputCls, cn } from "./ui";
 
-const BANK_OPTS: Opt[] = BANKS.map((b) => ({ value: b.id, label: b.name, group: b.group, icon: Landmark, hue: bankHue(b.name) }));
+const BANK_OPTS: Opt[] = BANKS.map((b) => ({ value: b.id, label: b.name, group: b.group, icon: Landmark, hue: bankHue(b.name), logo: bankLogoUrl(b.id) }));
 const TYPE_OPTS: Opt[] = (Object.entries(ACCOUNT_TYPES) as [AccountType, string][]).map(([value, label]) => ({ value, label }));
 const digits = (v: string, n: number) => v.replace(/\D/g, "").slice(0, n);
 
