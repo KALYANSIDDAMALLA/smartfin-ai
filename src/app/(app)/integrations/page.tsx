@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, KeyRound, Landmark, ShieldCheck, Smartphone } from "lucide-react";
 import { requireUser } from "@/lib/server/auth";
-import { bankLinkingOn } from "@/lib/integrations/setu";
+import { bankLinkingOn, setuSandbox } from "@/lib/integrations/setu";
 import { connectDemoBank, disconnectBank, loadDemoTransactions, refreshConnection, syncConnection } from "@/app/actions/integrations";
 import { ActionForm } from "@/components/action-form";
 import { BankLinkForm } from "@/components/bank-forms";
@@ -22,7 +22,7 @@ const STATUS: Record<string, { label: string; tone: "good" | "warn" | "neutral" 
 type Meta = { bank?: string; mobileLast4?: string; demo?: boolean; accounts?: { masked: string; type?: string }[] };
 
 export default async function BankLinks() {
-  const { supabase, profile } = await requireUser(); const live = bankLinkingOn();
+  const { supabase, profile } = await requireUser(); const live = bankLinkingOn(); const sandbox = live && setuSandbox();
   const [{ data: conns }, { data: consents }] = await Promise.all([
     supabase.from("integration_connections").select("*").eq("provider", "account_aggregator").neq("status", "revoked").order("created_at", { ascending: false }),
     supabase.from("integration_consents").select("*").order("created_at", { ascending: false }).limit(20),
@@ -41,6 +41,7 @@ export default async function BankLinks() {
               <div className="min-w-0"><p className="text-sm font-medium"><span className="text-muted">{i + 1}.</span> {s.t}</p><p className="mt-0.5 text-xs text-muted">{s.d}</p></div></li>); })}</ol>
           {!live && <div role="status" className="mb-4 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"><b>Live bank linking is not switched on yet.</b> You can still try the demo bank and import bank statements.
             <details className="mt-1 text-xs text-muted"><summary className="cursor-pointer text-brand">App owner? What is needed</summary><span className="mt-1 block">Add Setu Account Aggregator credentials (<code>SETU_CLIENT_ID</code>, <code>SETU_CLIENT_SECRET</code>, <code>SETU_PRODUCT_INSTANCE_ID</code>) to the server settings, set <code>BANK_LINKING_ENABLED=true</code>, and restart. A free sandbox is available on Setu Bridge; going live needs Setu&apos;s approval.</span></details></div>}
+          {sandbox && <div role="note" className="mb-4 rounded-xl border border-info/40 bg-info/10 px-4 py-3 text-sm"><b>Test mode.</b> This connects to Setu&apos;s practice system, not to real banks. <b>No real text message is sent to your phone</b>, and the approval page only accepts Setu&apos;s own test number and OTP. To track your real accounts today, import a statement or paste a bank SMS.</div>}
           <BankLinkForm enabled={live} />
           {!hasDemo && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4"><p className="max-w-xl text-sm text-muted">No bank handy, or just exploring? Add a <b className="font-medium text-fg">demo bank</b> with sample accounts and transactions. It is clearly marked and is not a real bank.</p>
             <ActionForm action={connectDemoBank} compact submit="Try a demo bank" variant="outline" /></div>}

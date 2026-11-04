@@ -8,12 +8,14 @@ import "server-only";
 export class SetuError extends Error { constructor(public status: number, public code: string, message: string) { super(message); } }
 
 const cfg = () => ({
-  base: (process.env.SETU_BASE_URL ?? "https://fiu-sandbox.setu.co").replace(/\/$/, ""),
-  prefix: process.env.SETU_API_PREFIX ?? "/v2",
+  base: (process.env.SETU_BASE_URL || "https://fiu-sandbox.setu.co").replace(/\/$/, ""),
+  prefix: process.env.SETU_API_PREFIX || "/v2",
   id: process.env.SETU_CLIENT_ID, secret: process.env.SETU_CLIENT_SECRET, product: process.env.SETU_PRODUCT_INSTANCE_ID,
 });
 export const setuConfigured = () => { const c = cfg(); return !!(c.id && c.secret && c.product); };
 /** Real bank linking is offered only when Setu is configured AND BANK_LINKING_ENABLED=true. This lets a server hold the keys without showing a button that Setu would refuse. */
+/** True when the configured Setu address is its practice (sandbox) system, where the banks and phone numbers are pretend and no real SMS is sent. */
+export const setuSandbox = () => /sandbox/i.test(cfg().base);
 export const bankLinkingOn = () => setuConfigured() && (process.env.BANK_LINKING_ENABLED ?? "").trim().toLowerCase() === "true";
 
 async function call<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
