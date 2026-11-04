@@ -44,7 +44,7 @@ export default async function Review({ params, searchParams }: { params: Promise
             </ActionForm></Card>))}</div>
         <Pagination page={page} pages={pages} size={size} count={count} sizes={SIZES} hrefFor={pageHref} />
         <div className="flex flex-wrap gap-3"><ActionForm action={confirmImport} submit={`Confirm ${(selected ?? 0).toLocaleString("en-IN")} selected rows`} confirm="Create transactions from the selected rows?"><input type="hidden" name="id" value={id} /></ActionForm>
-          <ActionForm action={cancelImport} compact submit="Discard import" variant="outline" confirm="Discard this import?"><input type="hidden" name="id" value={id} /></ActionForm></div>
+          <ActionForm action={cancelImport} submit="Discard import" variant="outline" confirm="Discard this import?"><input type="hidden" name="id" value={id} /></ActionForm></div>
         <p className="text-xs text-muted">Save row edits (“Update row”) on each page before moving on. Confirming imports every selected row on all pages, and we check again for duplicates among your existing transactions.</p>
       </div>
     </>
