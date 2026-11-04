@@ -86,7 +86,28 @@ export function looksLikePerson(name?: string | null): boolean {
   const n = (name ?? "").trim(); if (!n || n.length > 40 || BUSINESS_WORDS.test(n)) return false;
   const words = n.split(/\s+/); return words.length >= 1 && words.length <= 4 && words.every((w) => /^[A-Za-z][A-Za-z.'-]*$/.test(w));
 }
-/** The catch-all "Other" category for a payment to an individual when nothing says what it was for (never overrides a real match). */
+/** Name of the category for payments to / from individuals. */
+export const PERSON_CATEGORY = "Person";
+const personCat = (categories: { id: string; name: string; kind: string }[], kind: "expense" | "income") => categories.find((x) => x.kind === kind && x.name.toLowerCase() === PERSON_CATEGORY.toLowerCase());
+
+/**
+ * The person's name inside a bank narration such as "UPI/TALLAM LAXMI/562304193419/Payment from PhonePe", "IMPS/123456789012/RAVI KUMAR/…" or
+ * "UPI-RAVI KUMAR-ravi@okaxis-…". Needs two or more words (so brands and one-word shops are not taken for people) and must read like a person's name.
+ */
+export function personFromNarration(text?: string | null): string | null {
+  const t = (text ?? "").trim(); if (!/^(?:UPI|IMPS|NEFT|RTGS)\b/i.test(t)) return null;
+  const parts = t.split(t.includes("/") ? "/" : "-").map((p) => p.trim()).slice(1);
+  const name = parts.find((p) => /[A-Za-z]/.test(p) && !/^\d+$/.test(p)); if (!name || /[@\d]/.test(name)) return null;
+  return name.split(/\s+/).length >= 2 && looksLikePerson(name) ? name : null;
+}
+/** A payment to/from an individual (named in the bank narration) → the "Person" category, when no history or rule said otherwise. */
+export function personSuggestion(text: string | null | undefined, categories: { id: string; name: string; kind: string }[], kind: "expense" | "income"): Suggestion | null {
+  const name = personFromNarration(text); const c = name ? personCat(categories, kind) : undefined;
+  return c && name ? { categoryId: c.id, confidence: 0.7, source: "rules", reason: `“${name}” looks like a person` } : null;
+}
+/** A payment to an individual when nothing says what it was for: the "Person" category (or "Other" if that does not exist yet). Never overrides a real match. */
 export function personFallback(categories: { id: string; name: string; kind: string }[], kind: "expense" | "income", merchant?: string | null): { categoryId: string; reason: string } | null {
-  if (!looksLikePerson(merchant)) return null; const c = categories.find((x) => x.kind === kind && x.name.toLowerCase() === "other"); return c ? { categoryId: c.id, reason: `Payment to an individual (${merchant}) — set to “Other”; change it if it was for something specific.` } : null;
+  if (!looksLikePerson(merchant)) return null;
+  const c = personCat(categories, kind) ?? categories.find((x) => x.kind === kind && x.name.toLowerCase() === "other");
+  return c ? { categoryId: c.id, reason: `Payment to an individual (${merchant}) — set to “${c.name}”; change it if it was for something specific.` } : null;
 }

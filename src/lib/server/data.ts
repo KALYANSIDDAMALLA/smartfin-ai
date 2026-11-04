@@ -13,7 +13,14 @@ const fetchLookups = async (sb: SupabaseClient): Promise<Lookups> => {
     sb.from("categories").select("id,name,kind").order("name"),
     sb.from("payment_methods").select("id,code,label,channel").order("label"),
   ]);
-  return { categories: c.data ?? [], methods: (m.data ?? []) as Lookups["methods"] };
+  let categories = c.data ?? [];
+  // Every user gets a "Person" category (for payments to / from individuals); it is created here, once, if it is missing.
+  const uid = userIdOf(sb); const missing = (["expense", "income"] as const).filter((k) => !categories.some((x) => x.kind === k && x.name.toLowerCase() === "person"));
+  if (uid && missing.length) {
+    const { error } = await sb.from("categories").upsert(missing.map((kind) => ({ user_id: uid, name: "Person", kind, is_default: true })), { onConflict: "user_id,kind,name", ignoreDuplicates: true });
+    if (!error) { const again = await sb.from("categories").select("id,name,kind").order("name"); if (again.data) categories = again.data; }
+  }
+  return { categories, methods: (m.data ?? []) as Lookups["methods"] };
 };
 /** Per request AND per user for 2 minutes: these lists almost never change, so most page loads skip two database round trips. */
 export const loadLookups = cache(async (sb: SupabaseClient): Promise<Lookups> => {

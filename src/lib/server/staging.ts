@@ -4,7 +4,7 @@ import { loadTxs } from "./data";
 import { applyMapping, type Mapping, type RawRow } from "@/lib/imports/parse";
 import { detectDuplicates } from "@/lib/imports/dedupe";
 import { loadLookups } from "./data";
-import { suggestFromHistory, suggestFromRules } from "@/lib/finance/suggest";
+import { personSuggestion, suggestFromHistory, suggestFromRules } from "@/lib/finance/suggest";
 
 /** Duplicates can only be within the imported date span (±2 days), so only that slice of the ledger is read. */
 export function dupWindow(dates: (string | null)[]): [Date | undefined, Date | undefined] {
@@ -22,7 +22,7 @@ export async function stage(sb: Sb, userId: string, batchId: string, raws: RawRo
   // Auto-categorise from the user's own history, then built-in rules (suggestions only: the user reviews before confirming).
   const [lookups, histRes] = await Promise.all([loadLookups(sb), sb.from("transactions").select("merchant,name,category_id,type").not("category_id", "is", null).is("deleted_at", null).order("occurred_at", { ascending: false }).limit(800)]);
   const hist = histRes.data ?? [];
-  const catFor = (text: string | null, kind: "expense" | "income") => { if (!text) return null; const past = hist.filter((h) => h.type === kind).map((h) => ({ merchant: h.merchant, name: h.name, categoryId: h.category_id })); return (suggestFromHistory(past, text) ?? suggestFromRules(text, lookups.categories, kind))?.categoryId ?? null; };
+  const catFor = (text: string | null, kind: "expense" | "income") => { if (!text) return null; const past = hist.filter((h) => h.type === kind).map((h) => ({ merchant: h.merchant, name: h.name, categoryId: h.category_id })); return (suggestFromHistory(past, text) ?? suggestFromRules(text, lookups.categories, kind) ?? personSuggestion(text, lookups.categories, kind))?.categoryId ?? null; };
   let di = 0;
   const rows = parsed.map((p, i) => {
     const complete = !!(p.amountMinor && p.occurredAt); const d = complete ? dups[di++] : { duplicate: false, reason: undefined };

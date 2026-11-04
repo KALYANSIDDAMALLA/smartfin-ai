@@ -6,7 +6,7 @@ import { rateLimit } from "@/lib/server/ratelimit";
 import { loadLookups } from "@/lib/server/data";
 import { askJson } from "@/lib/server/ai";
 import { answerQuestion } from "@/lib/server/assistant";
-import { suggestFromHistory, suggestFromRules } from "@/lib/finance/suggest";
+import { personSuggestion, suggestFromHistory, suggestFromRules } from "@/lib/finance/suggest";
 
 export interface CatProposal { id: string; label: string; amountMinor: number; type: string; categoryId: string; categoryName: string; confidence: number; source: "history" | "rules" | "ai" }
 
@@ -24,7 +24,7 @@ export async function previewAutoCategorize(): Promise<{ proposals: CatProposal[
   for (const r of rows) {
     const text = r.merchant || r.name || ""; const kind = r.type as "expense" | "income";
     const past = (hist.data ?? []).filter((h) => h.type === kind).map((h) => ({ merchant: h.merchant, name: h.name, categoryId: h.category_id }));
-    const s = suggestFromHistory(past, text) ?? suggestFromRules(text, lookups.categories, kind);
+    const s = suggestFromHistory(past, text) ?? suggestFromRules(text, lookups.categories, kind) ?? personSuggestion(text, lookups.categories, kind);
     if (s?.categoryId) out.push({ id: r.id, label: text || "(no name)", amountMinor: Number(r.amount_minor), type: r.type, categoryId: s.categoryId, categoryName: catById.get(s.categoryId)?.name ?? "", confidence: s.confidence, source: s.source === "ai" ? "ai" : s.source });
     else if (text.trim().length >= 3) leftover.push(r);
   }
