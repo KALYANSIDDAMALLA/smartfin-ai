@@ -13,6 +13,8 @@ const cfg = () => ({
   id: process.env.SETU_CLIENT_ID, secret: process.env.SETU_CLIENT_SECRET, product: process.env.SETU_PRODUCT_INSTANCE_ID,
 });
 export const setuConfigured = () => { const c = cfg(); return !!(c.id && c.secret && c.product); };
+/** Real bank linking is offered only when Setu is configured AND BANK_LINKING_ENABLED=true. This lets a server hold the keys without showing a button that Setu would refuse. */
+export const bankLinkingOn = () => setuConfigured() && (process.env.BANK_LINKING_ENABLED ?? "").trim().toLowerCase() === "true";
 
 async function call<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
   const c = cfg(); if (!c.id || !c.secret || !c.product) throw new SetuError(0, "NotConfigured", "Setu credentials are not configured");

@@ -7,7 +7,7 @@ import { getUserOrNull } from "@/lib/server/auth";
 import { rateLimit } from "@/lib/server/ratelimit";
 import { notify } from "@/lib/server/notify";
 import { stage } from "@/lib/server/staging";
-import { createConsent, createSession, getConsent, getSession, revokeConsent, setuConfigured, SetuError } from "@/lib/integrations/setu";
+import { createConsent, createSession, getConsent, getSession, revokeConsent, bankLinkingOn, SetuError } from "@/lib/integrations/setu";
 import { AA_MAPPING, extractAATransactions } from "@/lib/integrations/aa-map";
 import { bankById } from "@/lib/banks";
 import { DEMO_BANK, sampleBankRows } from "@/lib/integrations/demo";
@@ -37,7 +37,7 @@ async function ownConnection(a: NonNullable<Awaited<ReturnType<typeof getUserOrN
 /** Step 1: ask the provider for a consent request and send the user to the provider's consent screen. Never asks for bank credentials. */
 export async function connectBank(_: FormState, fd: FormData): Promise<FormState> {
   const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
-  if (!setuConfigured()) return { error: "Bank connections aren't configured on this server." };
+  if (!bankLinkingOn()) return { error: "Bank linking isn't switched on yet. You can import a statement or try the demo bank instead." };
   if (!rateLimit(`aa-connect:${a.user.id}`, 5, 60 * 60_000).ok) return { error: "Too many attempts. Try again later." };
   if (fd.get("agree") !== "on") return { error: "Please tick the box to give your consent." };
   const mobile = z.string().transform((v) => v.replace(/[\s+-]/g, "").replace(/^91(?=\d{10}$)/, "")).pipe(z.string().regex(/^[6-9]\d{9}$/, "Enter the 10-digit mobile number linked to your bank")).safeParse(fd.get("mobile"));
