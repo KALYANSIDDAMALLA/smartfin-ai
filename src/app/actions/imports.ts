@@ -18,6 +18,10 @@ import type { FormState } from "./auth";
 const EXT_OK = ["csv", "xlsx", "pdf", "png", "jpg", "jpeg"];
 const MIME_OK: Record<string, string[]> = { csv: ["text/csv", "application/vnd.ms-excel", "text/plain", ""], xlsx: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"], pdf: ["application/pdf"], png: ["image/png"], jpg: ["image/jpeg"], jpeg: ["image/jpeg"] };
 const MAX_ROWS = 5000;
+/** Reads every row of a query. The database answers at most 1,000 rows per request, so a long statement would silently lose rows without paging. */
+async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
+  const out: T[] = []; for (let from = 0; ; from += 1000) { const { data, error } = await page(from, from + 999); if (error) throw new Error("Could not read the import rows."); out.push(...(data ?? [])); if ((data?.length ?? 0) < 1000) return out; }
+}
 
 export async function uploadImport(_: FormState, fd: FormData): Promise<FormState> {
   const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
@@ -67,7 +71,7 @@ export async function remapImport(_: FormState, fd: FormData): Promise<FormState
   const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
   const id = String(fd.get("id"));
   const { data: b } = await a.supabase.from("import_batches").select("id,status").eq("id", id).maybeSingle(); if (!b || b.status !== "preview") return { error: "Import not available." };
-  const { data: staged } = await a.supabase.from("staged_import_transactions").select("raw").eq("batch_id", id).order("row_index");
+  let staged; try { staged = await fetchAll((f, t) => a.supabase.from("staged_import_transactions").select("raw").eq("batch_id", id).order("row_index").range(f, t)); } catch { return { error: "Could not read the import rows. Please try again." }; }
   const g = (k: string) => (String(fd.get(k) ?? "") || undefined);
   const map: Mapping = { date: g("date"), description: g("description"), amount: g("amount"), debit: g("debit"), credit: g("credit"), ref: g("ref") };
   const { data: prof } = await a.supabase.from("profiles").select("timezone").eq("id", a.user.id).single();
@@ -97,7 +101,7 @@ export async function confirmImport(_: FormState, fd: FormData): Promise<FormSta
   const id = String(fd.get("id"));
   const { data: b } = await a.supabase.from("import_batches").select("id,status,file_kind").eq("id", id).maybeSingle();
   if (!b) return { error: "Import not found." }; if (b.status !== "preview") return { error: "This import was already processed." };
-  const { data: rows } = await a.supabase.from("staged_import_transactions").select("*").eq("batch_id", id).eq("include", true);
+  let rows; try { rows = await fetchAll((f, t) => a.supabase.from("staged_import_transactions").select("*").eq("batch_id", id).eq("include", true).order("row_index").range(f, t)); } catch { return { error: "Could not read the import rows. Please try again." }; }
   const ok = (rows ?? []).filter((r) => r.amount_minor && r.occurred_at);
   if (!ok.length) return { error: "No complete rows selected." };
   // Re-run duplicate check at confirmation time so double-confirm / concurrent imports can't create dupes.

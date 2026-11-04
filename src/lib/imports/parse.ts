@@ -51,8 +51,75 @@ export function applyMapping(row: RawRow, map: Mapping, tz = "Asia/Kolkata"): Pa
   return { amountMinor: amount, occurredAt, description, txType: type, externalRef, confidence: Math.min(1, Math.round(confidence * 100) / 100) };
 }
 
-/** Heuristic text-statement parser for PDFs: lines that start with a date and end with amount(s). Low confidence by design. */
+/** Heuristic text-statement parser for PDFs. Handles one-line rows and, when that finds less, statements where one transaction spans several lines. Low confidence by design. */
 export function parseStatementText(text: string): RawRow[] {
+  const one = parseStatementLines(text); const many = parseStatementRecords(text);
+  return many.length > one.length ? many : one;
+}
+
+const MONEY_TAIL = /(?:^|\s)(-?(?:\d{1,3}(?:,\d{2,3})+|\d+)\.\d{2})\s*(Cr|Dr)?\s*$/i;
+const RECORD_START = /^\s*(?:\d{1,5}\s+)?(\d{1,2}[-/ .](?:\d{1,2}|[A-Za-z]{3,9})[-/ .]\d{2,4})\b(.*)$/;
+/** Table headers and "Page n of m" lines can fall in the middle of a transaction: skip them without ending it. */
+const PAGE_LINE = /(?:^\s*#?\s*date\b.*\b(?:narration|particulars|description|details|remarks)\b)|\bpage\s+\d+\s*(?:of|\/)\s*\d+|statement\s+(?:period|generated)/i;
+/** Lines that close the transaction list (closing balance, totals, summary). */
+const END_LINE = /^\s*(?:closing\s+balance|statement\s+summary|total\b|end of statement|this is a computer)/i;
+const cents = (v: string) => Math.round(Number(v.replace(/,/g, "")) * 100);
+const monthIdx = (m: string) => ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"].indexOf(m.slice(0, 3).toLowerCase());
+/** Sortable key for a date string like "02 Jan 2026", "02/01/2026" or "02-01-26" (day first, as Indian statements are); null when it is not a real date. */
+function dateKey(d: string): number | null {
+  const m = /^(\d{1,2})[-/ .](\d{1,2}|[A-Za-z]{3,9})[-/ .](\d{2,4})$/.exec(d.trim()); if (!m) return null;
+  const day = Number(m[1]); const mon = /^\d+$/.test(m[2]) ? Number(m[2]) - 1 : monthIdx(m[2]); let y = Number(m[3]); if (y < 100) y += 2000;
+  return day >= 1 && day <= 31 && mon >= 0 && mon <= 11 ? y * 10000 + (mon + 1) * 100 + day : null;
+}
+
+/**
+ * Statements where one transaction takes several lines (date and description first, amounts on a later line), with a withdrawal/deposit pair
+ * and a running balance. Each transaction is the date line plus the lines below it up to the next date; the amount is the number before the
+ * trailing balance, and money in or out is worked out from how the balance moved (a Cr/Dr label is used when there is one).
+ */
+export function parseStatementRecords(text: string): RawRow[] { return readStatementRecords(text).rows; }
+
+/** Same as `parseStatementRecords`, plus how each money-in/money-out decision was made (for tests and diagnostics). */
+export function readStatementRecords(text: string): { rows: RawRow[]; stats: { byBalance: number; byLabel: number; byGuess: number; opening: number | null; closing: number | null; misses: { i: number; delta: number; amount: number; tokens: number; body: string }[] } } {
+  const stats = { byBalance: 0, byLabel: 0, byGuess: 0, opening: null as number | null, closing: null as number | null, misses: [] as { i: number; delta: number; amount: number; tokens: number; body: string }[] };
+  type Rec = { date: string; body: string }; const recs: Rec[] = []; let cur: Rec | null = null; let opening: number | null = null;
+  const peel = (body: string) => { const t: { v: number; dc: "cr" | "dr" | null }[] = []; let rest = body.trim();
+    for (let i = 0; i < 3; i++) { rest = rest.replace(/(?:^|\s)-\s*$/, "").trim(); const m = MONEY_TAIL.exec(rest); if (!m) break; t.unshift({ v: cents(m[1]), dc: m[2] ? (m[2].toLowerCase() as "cr" | "dr") : null }); rest = rest.slice(0, m.index).trim(); }
+    return { tokens: t, desc: rest.replace(/(?:^|\s)-(?:\s+-)*\s*$/, "").replace(/\s+/g, " ").trim() }; };
+  // Page furniture (bank name, table header, "statement generated on…", page markers) repeats on every page; drop it so it is never glued onto a transaction.
+  const all = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean); const seen = new Map<string, number>(); for (const l of all) seen.set(l, (seen.get(l) ?? 0) + 1);
+  const furniture = (l: string) => /^-+\s*\d+\s*(?:of|\/)\s*\d+\s*-+$/i.test(l) || (!MONEY_TAIL.test(l) && !RECORD_START.test(l) && ((seen.get(l) ?? 0) >= 8 || ((seen.get(l) ?? 0) >= 3 && l.length >= 12) || ((seen.get(l) ?? 0) >= 2 && l.length >= 25)));
+  for (const line of all) {
+    if (furniture(line)) continue;
+    if (/^\s*(?:\S+\s+)?opening\s+balance|\bopening\s+balance\b/i.test(line) && !RECORD_START.test(line)) { const o = peel(line).tokens; if (o.length) opening = o[o.length - 1].v; cur = null; continue; }
+    if (END_LINE.test(line)) { cur = null; continue; }
+    if (PAGE_LINE.test(line)) continue;
+    const m = RECORD_START.exec(line);
+    if (m && dateKey(m[1]) !== null) { cur = { date: m[1], body: m[2].trim() }; recs.push(cur); }
+    else if (cur) { cur.body += " " + line.trim(); }
+    if (cur && MONEY_TAIL.test(cur.body.replace(/(?:^|\s)-\s*$/, ""))) cur = null; // it ends with its amounts: this transaction is complete
+  }
+  // newest-first statements: walk them oldest-first so the running balance makes sense
+  const keys = recs.map((r) => dateKey(r.date) ?? 0); const desc = keys.length > 1 && keys[0] > keys[keys.length - 1]; const ordered = desc ? [...recs].reverse() : recs;
+  stats.opening = opening; let prev: number | null = desc ? null : opening; const rows: RawRow[] = [];
+  for (const r of ordered) {
+    const { tokens, desc: d } = peel(r.body); if (!tokens.length) continue;
+    let amount: number; let bal: number | null = null; let dir: "cr" | "dr" | null = null;
+    if (tokens.length === 1) amount = tokens[0].v;
+    else if (tokens.length === 2) { amount = tokens[0].v; bal = tokens[1].v; dir = tokens[0].dc; }
+    else { const [w, dep] = tokens; bal = tokens[2].v; if (w.v && !dep.v) { amount = w.v; dir = "dr"; } else if (dep.v && !w.v) { amount = dep.v; dir = "cr"; } else { amount = Math.max(w.v, dep.v); } }
+    if (!(amount > 0)) { if (bal !== null) prev = bal; continue; }
+    let how: "byBalance" | "byLabel" | "byGuess" = dir ? "byLabel" : "byGuess";
+    if (bal !== null && prev !== null && Math.abs(Math.abs(bal - prev) - amount) <= 1) { dir = bal > prev ? "cr" : "dr"; how = "byBalance"; } // the balance moved by exactly this amount
+    if (bal !== null && prev !== null && how !== "byBalance" && stats.misses.length < 80) stats.misses.push({ i: rows.length, delta: bal - prev, amount, tokens: tokens.length, body: r.body });
+    if (bal !== null) { prev = bal; stats.closing = bal; }
+    if (!dir) dir = /\b(?:salary|refund|interest|cashback|credit|deposit|received|reversal)\b|(?:^|\/)cr\b/i.test(d) ? "cr" : "dr";
+    stats[how]++; rows.push({ Date: r.date, Description: d.slice(0, 300), Amount: `${(amount / 100).toFixed(2)} ${dir === "cr" ? "Cr" : "Dr"}` });
+  }
+  return { rows, stats };
+}
+
+function parseStatementLines(text: string): RawRow[] {
   const rows: RawRow[] = [];
   for (const line of text.split(/\r?\n/)) {
     const m = /^\s*(\d{1,2}[-/ .](?:\d{1,2}|[A-Za-z]{3})[-/ .]\d{2,4})\s+(.+?)\s+(-?[\d,]+\.\d{2})\s*(Cr|Dr|CR|DR)?\s*(?:-?[\d,]+\.\d{2}\s*(?:Cr|Dr|CR|DR)?)?\s*$/.exec(line);
