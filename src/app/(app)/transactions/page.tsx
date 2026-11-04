@@ -11,6 +11,8 @@ import { TypeBadge, EmptyState, PageHeader, Table, Td, Th } from "@/components/u
 import { TxFilters } from "@/components/tx-filters";
 import { Pagination } from "@/components/pagination";
 import { AutoCategorize } from "@/components/auto-categorize";
+import { MarkBox, TxBulk } from "@/components/tx-bulk";
+import { applyTxFilters } from "@/lib/server/tx-filter";
 
 const SIZES = [10, 25, 50, 100];
 
@@ -23,15 +25,7 @@ export default async function Transactions({ searchParams }: { searchParams: Pro
   const size = SIZES.includes(Number(sp.size)) ? Number(sp.size) : 25; let page = Math.max(1, Math.floor(Number(sp.page)) || 1);
   const [col, asc] = SORTS[sp.sort ?? "newest"] ?? SORTS.newest;
 
-  const base = (head = false) => { let q = supabase.from("transactions").select(head ? "id" : "*", head ? { count: "exact", head: true } : { count: "exact" }).is("deleted_at", null)
-    .gte("occurred_at", range.start.toISOString()).lt("occurred_at", range.end.toISOString());
-  if (sp.type) q = q.eq("type", sp.type);
-  if (sp.cat) q = q.eq("category_id", sp.cat);
-  const minR = Number(sp.min), maxR = Number(sp.max); if (sp.min && minR >= 0) q = q.gte("amount_minor", Math.round(minR * 100)); if (sp.max && maxR >= 0) q = q.lte("amount_minor", Math.round(maxR * 100));
-  if (sp.method) q = q.eq("payment_method_id", sp.method);
-  if (sp.channel) q = q.eq("channel", sp.channel);
-  if (sp.q) { const s = sp.q.replace(/[%_,()]/g, " ").trim().slice(0, 100); if (s) q = q.or(`name.ilike.%${s}%,merchant.ilike.%${s}%,description.ilike.%${s}%`); }
-  return q; };
+  const base = (head = false) => applyTxFilters(supabase.from("transactions").select(head ? "id" : "*", head ? { count: "exact", head: true } : { count: "exact" }), sp, range);
   const fetchPage = (pg: number) => base().order(col, { ascending: asc }).order("id").range((pg - 1) * size, pg * size - 1); // "id" makes the order unique, so no row repeats or vanishes between pages
   const [lookups, first] = await Promise.all([loadLookups(supabase), fetchPage(page)]); let res = first;
   if (res.error && res.error.code === "PGRST103") { // page number past the end: show the last real page instead of an error
@@ -52,18 +46,19 @@ export default async function Transactions({ searchParams }: { searchParams: Pro
       {error ? <p role="alert" className="text-sm text-bad">Could not load transactions.</p> : !data?.length ? (
         <EmptyState title="No transactions match" hint="Try a different range or clear filters." />
       ) : (
-        <Table><thead><tr><Th>Date</Th><Th>Name</Th><Th className="hidden md:table-cell">Category</Th><Th className="hidden md:table-cell">Method</Th><Th className="hidden md:table-cell">Type</Th><Th className="text-right">Amount</Th><Th><span className="sr-only">Actions</span></Th></tr></thead><tbody>
+        <TxBulk total={count ?? 0} sp={sp}><Table><thead><tr><Th className="w-10"><MarkBox all label="Mark all on this page" /></Th><Th>Date</Th><Th>Name</Th><Th className="hidden md:table-cell">Category</Th><Th className="hidden md:table-cell">Method</Th><Th className="hidden whitespace-nowrap md:table-cell">Type</Th><Th className="text-right">Amount</Th><Th><span className="sr-only">Actions</span></Th></tr></thead><tbody>
           {data.map((r) => { const plus = r.type === "income" || r.type === "refund"; return (
-            <tr key={r.id} data-id={r.id}>
+            <tr key={r.id} data-id={r.id} className="has-[input[data-mark-row]:checked]:bg-brand/10">
+              <Td className="w-10"><MarkBox id={r.id} label={`Mark ${r.name ?? r.merchant ?? "transaction"}`} /></Td>
               <Td className="whitespace-nowrap text-muted"><span className="md:hidden">{new Date(r.occurred_at).toLocaleDateString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short" })}</span><span className="hidden md:inline">{new Date(r.occurred_at).toLocaleDateString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", year: "numeric" })}</span></Td>
               <Td>{r.name ?? r.merchant ?? "—"}{r.merchant && r.name && <span className="block text-xs text-muted">{r.merchant}</span>}
                 <span className="block text-xs text-muted md:hidden">{[catName(r.category_id), methodName(r.payment_method_id)].filter((x) => x && x !== "—").join(" · ")}</span></Td>
               <Td className="hidden md:table-cell">{catName(r.category_id)}</Td><Td className="hidden md:table-cell">{methodName(r.payment_method_id)}</Td>
-              <Td className="hidden md:table-cell"><TypeBadge type={r.type} /></Td>
+              <Td className="hidden whitespace-nowrap md:table-cell"><TypeBadge type={r.type} /></Td>
               <Td className={`tabnum text-right ${plus ? "text-good" : ""}`}>{plus ? "+" : ""}{formatMoney(Number(r.amount_minor), profile.currency)}</Td>
               <Td className="whitespace-nowrap"><ConfirmAction action={deleteTransaction} fields={{ id: r.id }} label={`Delete ${r.name ?? "transaction"}`} confirm={`${r.name ?? r.merchant ? `Delete “${r.name ?? r.merchant}” (${formatMoney(Number(r.amount_minor), profile.currency)})?` : `Delete this ${formatMoney(Number(r.amount_minor), profile.currency)} ${r.type}?`} It will no longer count in your totals.`} success="Transaction deleted.">Delete</ConfirmAction></Td>
             </tr>); })}
-        </tbody></Table>
+        </tbody></Table></TxBulk>
       )}
       <Pagination page={page} pages={pages} size={size} count={count ?? 0} sizes={SIZES} hrefFor={pageHref} />
     </>

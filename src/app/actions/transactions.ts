@@ -7,7 +7,11 @@ import { checkBudgetAlerts } from "@/lib/server/budget-alerts";
 import { notify } from "@/lib/server/notify";
 import { isUnusual } from "@/lib/finance/automation";
 import { formatMoney } from "@/lib/finance/money";
+import { applyTxFilters } from "@/lib/server/tx-filter";
+import { resolveRange, type SP } from "@/lib/server/range";
 import type { FormState } from "./auth";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** user_id is ALWAYS taken from the verified session, never from the form. RLS + composite FKs re-check ownership of every referenced id. */
 function row(d: ReturnType<typeof txSchema.parse>, userId: string) {
@@ -61,6 +65,31 @@ export async function deleteTransaction(fd: FormData) {
   const id = String(fd.get("id") ?? "");
   await auth.supabase.from("transactions").update({ deleted_at: new Date().toISOString() }).eq("id", id);
   revalidatePath("/transactions"); revalidatePath("/dashboard");
+}
+
+const refresh = () => { for (const p of ["/transactions", "/dashboard", "/analytics", "/budgets", "/reports", "/income", "/payments/online", "/payments/offline"]) revalidatePath(p); };
+
+/** Deletes the transactions the user marked (at most 200 at a time). Soft delete, like the single Delete button. */
+export async function deleteTransactions(ids: string[]): Promise<{ deleted: number; error?: string }> {
+  const auth = await getUserOrNull(); if (!auth) return { deleted: 0, error: "Please log in again." };
+  const list = [...new Set((Array.isArray(ids) ? ids : []).map(String))]; if (!list.length) return { deleted: 0, error: "Mark at least one transaction first." };
+  if (list.length > 200 || !list.every((i) => UUID.test(i))) return { deleted: 0, error: "That selection isn't valid." };
+  const { data, error } = await auth.supabase.from("transactions").update({ deleted_at: new Date().toISOString() }).in("id", list).is("deleted_at", null).select("id");
+  if (error) return { deleted: 0, error: "Could not delete. Please try again." };
+  forgetUser(auth.user.id); refresh(); return { deleted: data?.length ?? 0 };
+}
+
+/** Deletes EVERY transaction in the current Transactions view (its period and all filters), however many pages that is. The count must match what the user confirmed. */
+export async function deleteAllMatching(sp: SP, expected: number): Promise<{ deleted: number; error?: string }> {
+  const auth = await getUserOrNull(); if (!auth) return { deleted: 0, error: "Please log in again." };
+  const { data: prof } = await auth.supabase.from("profiles").select("timezone").eq("id", auth.user.id).single();
+  const { range } = resolveRange(sp ?? {}, prof?.timezone ?? "Asia/Kolkata", new Date(), "year");
+  const { count } = await applyTxFilters(auth.supabase.from("transactions").select("id", { count: "exact", head: true }), sp ?? {}, range);
+  if ((count ?? 0) !== expected) return { deleted: 0, error: `The list changed (it now has ${(count ?? 0).toLocaleString("en-IN")} matching transactions, not ${expected.toLocaleString("en-IN")}). Nothing was deleted. Reload and try again.` };
+  if (!count) return { deleted: 0, error: "There is nothing to delete." };
+  const { data, error } = await applyTxFilters(auth.supabase.from("transactions").update({ deleted_at: new Date().toISOString() }), sp ?? {}, range).select("id");
+  if (error) return { deleted: 0, error: "Could not delete. Please try again." };
+  forgetUser(auth.user.id); refresh(); return { deleted: data?.length ?? 0 };
 }
 
 export async function markRecurringPaid(fd: FormData) {

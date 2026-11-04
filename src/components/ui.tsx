@@ -27,7 +27,7 @@ export function TypeBadge({ type }: { type: string }) {
   const t = type === "expense" ? "border-red-500/60 bg-red-500/15 text-red-600 shadow-[0_0_12px_rgba(239,68,68,0.55)] dark:text-red-300"
     : type === "income" || type === "refund" ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-700 shadow-[0_0_12px_rgba(16,185,129,0.55)] dark:text-emerald-300"
     : "border-line bg-surface2 text-muted";
-  return <span className={cn("inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize", t)}>{type}</span>;
+  return <span className={cn("inline-flex whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize [overflow-wrap:normal]", t)}>{type}</span>;
 }
 export function Progress({ pct, tone = "brand" }: { pct: number; tone?: "brand" | "warn" | "bad" }) {
   const c = { brand: "bg-brand", warn: "bg-warn", bad: "bg-bad" }[tone];
