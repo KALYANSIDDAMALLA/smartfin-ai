@@ -119,17 +119,26 @@ export async function checkBalance(id: string): Promise<{ balanceMinor: number; 
   return { error: "Live balance isn't available yet. Fetch transactions to refresh your records." };
 }
 
-/** Revoke at the provider first (so access really stops), then record it. */
+/**
+ * Removes the bank from SmartFin. We ask the provider to cancel the consent first (so sharing really stops), but a failure there must never trap the user
+ * with a bank they cannot remove: a request nobody approved yet has nothing to cancel (Setu answers "not ready"), and the provider may be unreachable.
+ * Either way the link is marked removed here, so SmartFin stops using it, and the message says honestly what happened.
+ */
 export async function disconnectBank(_: FormState, fd: FormData): Promise<FormState> {
   const a = await getUserOrNull(); if (!a) return { error: "Please log in again." };
   const conn = await ownConnection(a, String(fd.get("id"))); if (!conn) return { error: "Connection not found." };
   const isDemo = !!(conn.meta as { demo?: boolean } | null)?.demo; // demo rows have no real consent at the provider
+  let providerOk = true;
   if (!isDemo && conn.external_id && ["connected", "pending_consent"].includes(conn.status)) {
-    try { await revokeConsent(conn.external_id); } catch (e) { if (!(e instanceof SetuError && e.status === 404)) return providerErr(e); }
+    try { await revokeConsent(conn.external_id); }
+    catch (e) { if (!(e instanceof SetuError && e.status === 404)) { providerOk = false; console.error("revoke failed:", e instanceof SetuError ? `${e.status} ${e.code} ${e.message}` : (e as Error).message); } }
   }
-  await a.supabase.from("integration_connections").update({ status: "revoked" }).eq("id", conn.id);
+  const { error } = await a.supabase.from("integration_connections").update({ status: "revoked" }).eq("id", conn.id);
+  if (error) return { error: "Could not remove the bank. Please try again." };
   if (conn.status === "connected") await a.supabase.from("integration_consents").insert({ user_id: a.user.id, connection_id: conn.id, provider: PROVIDER, scopes: SCOPES, action: "revoked" });
-  revalidatePath("/integrations"); return { ok: "Disconnected. The bank can no longer share data with SmartFin." };
+  revalidatePath("/integrations");
+  if (conn.status === "pending_consent" || providerOk) return { ok: conn.status === "pending_consent" ? "Bank removed." : "Disconnected. The bank can no longer share data with SmartFin." };
+  return { ok: "Removed from SmartFin AI. We couldn't reach the provider to cancel the sharing, so please also cancel it in your Account Aggregator app." };
 }
 
 /** Adds a clearly marked DEMO bank (sample accounts and balance, no real consent) so the whole flow can be tried without an Account Aggregator. */
