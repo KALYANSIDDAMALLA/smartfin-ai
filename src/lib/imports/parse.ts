@@ -6,7 +6,8 @@ export interface Mapping { date?: string; description?: string; amount?: string;
 export interface Parsed { amountMinor: number | null; occurredAt: string | null; description: string | null; txType: "income" | "expense" | null; externalRef: string | null; confidence: number }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-const find = (headers: string[], keys: string[]) => headers.find((h) => keys.some((k) => norm(h).includes(k)));
+/** First header matching the keys, trying them in priority order. Two-letter abbreviations ("dr", "cr") must match the whole header: "Description" contains "cr". */
+const find = (headers: string[], keys: string[]) => { for (const k of keys) { const h = headers.find((x) => (k.length <= 2 ? norm(x) === k : norm(x).includes(k))); if (h) return h; } return undefined; };
 
 /** Best-effort column detection; the user can override in the UI. */
 export function detectMapping(headers: string[]): Mapping {

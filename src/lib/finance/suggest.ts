@@ -90,15 +90,26 @@ export function looksLikePerson(name?: string | null): boolean {
 export const PERSON_CATEGORY = "Person";
 const personCat = (categories: { id: string; name: string; kind: string }[], kind: "expense" | "income") => categories.find((x) => x.kind === kind && x.name.toLowerCase() === PERSON_CATEGORY.toLowerCase());
 
+/** Single words that are never a person's name in a narration: generic words, wallets/apps and well-known brands. */
+const NOT_A_PERSON = new Set(("self own my your me the account accounts card cash bank atm payment payments transfer upi imps neft rtgs refund reversal interest charges charge fee fees salary rent emi loan bill bills recharge purchase pos sent received paid pay credit debit " +
+  "paytm phonepe gpay googlepay bharatpe amazon flipkart swiggy zomato uber ola rapido netflix spotify hotstar jio airtel vi bsnl irctc redbus makemytrip zepto blinkit bigbasket dmart myntra ajio nykaa lenskart meesho cred razorpay phonepay").split(" "));
+
 /**
- * The person's name inside a bank narration such as "UPI/TALLAM LAXMI/562304193419/Payment from PhonePe", "IMPS/123456789012/RAVI KUMAR/…" or
- * "UPI-RAVI KUMAR-ravi@okaxis-…". Needs two or more words (so brands and one-word shops are not taken for people) and must read like a person's name.
+ * The person's name in a bank narration, wherever it is: "UPI/TALLAM LAXMI/562304193419/Payment from PhonePe", "IMPS/123456789012/RAVI KUMAR/…",
+ * "UPI-RAVI KUMAR-ravi@okaxis-…", or free text such as "Transfer to RAVI KUMAR" / "Received from Suresh Babu". It must read like a person's name
+ * (no business words, brands or digits). On UPI/IMPS lines a one-word name counts too; elsewhere two or more words are needed.
  */
 export function personFromNarration(text?: string | null): string | null {
-  const t = (text ?? "").trim(); if (!/^(?:UPI|IMPS|NEFT|RTGS)\b/i.test(t)) return null;
-  const parts = t.split(t.includes("/") ? "/" : "-").map((p) => p.trim()).slice(1);
-  const name = parts.find((p) => /[A-Za-z]/.test(p) && !/^\d+$/.test(p)); if (!name || /[@\d]/.test(name)) return null;
-  return name.split(/\s+/).length >= 2 && looksLikePerson(name) ? name : null;
+  const t = (text ?? "").trim(); if (!t) return null;
+  const ok = (n: string, minWords: number) => { const words = n.split(/\s+/); return words.length >= minWords && !/[@\d]/.test(n) && looksLikePerson(n) && !words.some((w) => NOT_A_PERSON.has(w.toLowerCase().replace(/[^a-z]/g, ""))); };
+  const m = /^(UPI|IMPS|NEFT|RTGS)\b/i.exec(t);
+  if (m) { // structured: the first part after the payment type that is not just a number
+    const parts = t.split(t.includes("/") ? "/" : "-").map((p) => p.trim()).slice(1); const name = parts.find((p) => /[A-Za-z]/.test(p) && !/^\d+$/.test(p));
+    if (name && ok(name, /^(UPI|IMPS)$/i.test(m[1]) ? 1 : 2)) return name;
+  }
+  // free text: "to Ravi Kumar", "from SURESH BABU", "by Anita Rao"
+  for (const f of t.matchAll(/\b(?:to|from|by)\s+(?=([A-Za-z][A-Za-z.'-]*(?:\s+[A-Za-z][A-Za-z.'-]*){1,3}))/gi)) { const cand = f[1].replace(/\s+(?:on|via|at|for|ref|using|through|a\/c)\b.*$/i, "").trim(); if (ok(cand, 2)) return cand; }
+  return null;
 }
 /** A payment to/from an individual (named in the bank narration) → the "Person" category, when no history or rule said otherwise. */
 export function personSuggestion(text: string | null | undefined, categories: { id: string; name: string; kind: string }[], kind: "expense" | "income"): Suggestion | null {

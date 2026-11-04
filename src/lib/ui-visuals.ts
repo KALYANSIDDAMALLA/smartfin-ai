@@ -1,14 +1,24 @@
-import { Utensils, ShoppingBag, Car, GraduationCap, HeartPulse, Home, Zap, Clapperboard, Plane, Repeat, User, Shield, Landmark, Briefcase, Store, Laptop, Building2, Percent, TrendingUp, Gift, Tag, Boxes, Users, Receipt, Megaphone, Package, BadgeCheck, Smartphone, CreditCard, ArrowLeftRight, Banknote, Wallet, ShoppingCart, Wifi, QrCode, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Baby, BadgeCheck, Banknote, Bike, BookOpen, Boxes, Bus, CalendarSync, CarFront, Clapperboard, Coffee, Cpu, CreditCard, Droplets, Dumbbell, Flame, Fuel, Gamepad2, Gift, GraduationCap, HandCoins, HandHeart, HeartPulse, Home, KeyRound, Landmark, Laptop, Megaphone, Music, Package, PartyPopper, PawPrint, Percent, PiggyBank, Pill, Plane, QrCode, Receipt, Repeat, Scissors, Shapes, ShieldCheck, ShoppingBag, ShoppingBasket, ShoppingCart, Smartphone, Smile, Store, Tag, Ticket, TrendingUp, UserRound, Users, UtensilsCrossed, Wallet, Wifi, Wrench, Zap, type LucideIcon } from "lucide-react";
 
 export interface Visual { icon: LucideIcon; hue: number }
 const hash = (s: string) => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
 
 const CATEGORY: [RegExp, LucideIcon, number][] = [
-  [/food|grocer|dining|restaurant/i, Utensils, 28], [/shop/i, ShoppingBag, 320], [/transport|fuel|travel by|cab/i, Car, 205], [/educat|school|course/i, GraduationCap, 255], [/health|medic/i, HeartPulse, 350],
-  [/rent/i, Home, 160], [/utilit|electric|bill/i, Zap, 45], [/entertain|movie/i, Clapperboard, 285], [/travel|trip/i, Plane, 190], [/subscri/i, Repeat, 265], [/personal/i, User, 215],
-  [/insur/i, Shield, 175], [/loan|emi/i, Landmark, 12], [/salary/i, Briefcase, 150], [/business/i, Store, 25], [/freelanc/i, Laptop, 230], [/rental/i, Building2, 170], [/interest/i, Percent, 95],
-  [/invest|dividend/i, TrendingUp, 140], [/gift/i, Gift, 330], [/inventory|stock/i, Boxes, 35], [/staff|salaries|wages/i, Users, 200], [/gst|tax/i, Receipt, 8], [/market|ads/i, Megaphone, 300],
-  [/packag|courier/i, Package, 55], [/professional|fees/i, BadgeCheck, 240],
+  [/^person$/i, UserRound, 262], [/^other$/i, Shapes, 222], // exact names first: "Person" must not fall into "Personal"
+  [/coffee|cafe|tea\b/i, Coffee, 30], [/food|dining|restaurant|meal|eating/i, UtensilsCrossed, 24], [/grocer/i, ShoppingBasket, 100], [/shop|cloth|fashion|apparel/i, ShoppingBag, 322],
+  [/fuel|petrol|diesel/i, Fuel, 14], [/bike|cycle/i, Bike, 190], [/transport|cab|taxi|metro|bus\b/i, Bus, 205], [/vehicle|parking|toll|\bcar\b/i, CarFront, 212],
+  [/book/i, BookOpen, 250], [/educat|school|course|tuition|college/i, GraduationCap, 258],
+  [/pharmac|medicine|pill/i, Pill, 342], [/health|medic|doctor|hospital|clinic/i, HeartPulse, 352],
+  [/rental|tenant/i, KeyRound, 172], [/rent|housing|mortgage/i, Home, 160],
+  [/internet|wifi|broadband/i, Wifi, 198], [/phone|mobile|recharge/i, Smartphone, 216], [/water/i, Droplets, 196], [/\bgas\b|cylinder/i, Flame, 18], [/utilit|electric|bill/i, Zap, 44],
+  [/party|outing/i, PartyPopper, 318], [/game|gaming/i, Gamepad2, 140], [/music/i, Music, 292], [/entertain|movie|film|cinema/i, Clapperboard, 286],
+  [/travel|trip|holiday|flight/i, Plane, 192], [/subscri|membership/i, CalendarSync, 266], [/personal|self care|grooming/i, Smile, 216], [/salon|beauty/i, Scissors, 330],
+  [/insur/i, ShieldCheck, 175], [/loan|emi|debt|credit card/i, HandCoins, 10], [/saving/i, PiggyBank, 332], [/donat|charity|temple|church/i, HandHeart, 345],
+  [/kid|child|baby/i, Baby, 200], [/\bpet|dog|\bcat\b/i, PawPrint, 36], [/fitness|gym|sport/i, Dumbbell, 152], [/electronic|gadget|computer/i, Cpu, 232], [/repair|maintenance/i, Wrench, 38],
+  [/salary|wages? received|paycheck/i, Banknote, 150], [/business|sales|revenue/i, Store, 26], [/freelanc|consult/i, Laptop, 232], [/interest/i, Percent, 96],
+  [/invest|dividend|stock|mutual/i, TrendingUp, 142], [/gift|bonus|reward|cashback/i, Gift, 332],
+  [/inventory|stock/i, Boxes, 35], [/staff|salaries|employee/i, Users, 200], [/gst|tax/i, Receipt, 8], [/market|ads|advert/i, Megaphone, 300],
+  [/packag|courier/i, Package, 55], [/professional|fees/i, BadgeCheck, 240], [/ticket|event/i, Ticket, 20],
 ];
 /** Icon + colour for a category name (custom categories get a stable colour from their name). */
 export function categoryVisual(name: string): Visual {

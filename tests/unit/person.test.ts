@@ -13,8 +13,15 @@ describe("payments to people", () => {
     expect(personFromNarration("UPI-RAVI KUMAR-ravi@okaxis-Dinner")).toBe("RAVI KUMAR");
     expect(personFromNarration("upi/Edunuri Varshitha/100000000001/Sent")).toBe("Edunuri Varshitha");
   });
-  it("does not take businesses, brands or one-word names for people", () => {
-    for (const t of ["UPI/SWIGGY/100000000001/Order", "UPI/BIG BAZAAR PVT LTD/100000000002/POS", "UPI/RELIANCE RETAIL LTD/1/x", "UPI/Apollo Pharmacy/1/x", "UPI/ZEPTO MARKETPLACE SERVICES/1/x", "NEFT/ACME TECH PVT LTD/SALARY/1", "UPI/swiggy@icici/1/x", "UPI/PAYTM 9876/1/x", "POS/Reliance Smart Store", "Salary credited", ""])
+  it("accepts one-word names on UPI/IMPS lines and names after to / from", () => {
+    expect(personFromNarration("UPI/RAVI/100000000001/Sent using Paytm")).toBe("RAVI");
+    expect(personFromNarration("IMPS/123456789012/Suresh/gift")).toBe("Suresh");
+    expect(personFromNarration("Transfer to RAVI KUMAR on 12/01")).toBe("RAVI KUMAR");
+    expect(personFromNarration("Received from Suresh Babu via UPI")).toBe("Suresh Babu");
+    expect(personFromNarration("BY TRANSFER FROM ANITA RAO REF 123")).toBe("ANITA RAO");
+  });
+  it("does not take businesses, brands or generic words for people", () => {
+    for (const t of ["UPI/SWIGGY/100000000001/Order", "UPI/PAYTM/1/x", "UPI/SELF/1/x", "UPI/BIG BAZAAR PVT LTD/100000000002/POS", "Payment to Swiggy Foods Pvt Ltd", "Transfer to own account", "Paid to Amazon Pay", "NEFT/RAVI/1/x", "UPI/RELIANCE RETAIL LTD/1/x", "UPI/Apollo Pharmacy/1/x", "UPI/ZEPTO MARKETPLACE SERVICES/1/x", "NEFT/ACME TECH PVT LTD/SALARY/1", "UPI/swiggy@icici/1/x", "UPI/PAYTM 9876/1/x", "POS/Reliance Smart Store", "Salary credited", "ATM CASH WITHDRAWAL", ""])
       expect(personFromNarration(t), t).toBeNull();
   });
   it("suggests the Person category for the right kind", () => {

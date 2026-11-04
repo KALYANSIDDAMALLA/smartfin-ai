@@ -5,6 +5,7 @@ import { Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 import { Select } from "./select";
 import { NumInput } from "./num-input";
 import { cn } from "./ui";
+import { groupedCategoryOptions } from "@/lib/category-options";
 import { DateBox } from "./date-box";
 
 const PRESETS = [["today", "Today"], ["week", "This week"], ["month", "This month"], ["year", "This year"], ["custom", "Custom"]] as const;
@@ -14,7 +15,7 @@ const SORTS: Record<string, string> = { newest: "Newest first", oldest: "Oldest 
  * Sticky filter bar for the transactions list. Everything applies as you change it (search is debounced) and lives in the URL,
  * so filtered views can be bookmarked or shared. It stays pinned under the header while the list scrolls.
  */
-export function TxFilters({ categories, methods, count }: { categories: { id: string; name: string }[]; methods: { id: string; label: string }[]; count: number }) {
+export function TxFilters({ categories, methods, count }: { categories: { id: string; name: string; kind: string }[]; methods: { id: string; label: string }[]; count: number }) {
   const router = useRouter(); const path = usePathname(); const sp = useSearchParams(); const [pending, start] = useTransition();
   const get = (k: string) => sp.get(k) ?? ""; const range = get("range") || "year";
   const [q, setQ] = useState(get("q")); const [min, setMin] = useState(get("min")); const [max, setMax] = useState(get("max")); const [open, setOpen] = useState(false);
@@ -71,7 +72,7 @@ export function TxFilters({ categories, methods, count }: { categories: { id: st
 
       <div className={cn("grid gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6", !open && "max-md:hidden")}>
         <Select aria-label="Type" value={get("type")} onChange={(e) => go({ type: e.target.value || null })}><option value="">All types</option>{["expense", "income", "refund", "transfer", "adjustment"].map((t) => <option key={t} value={t}>{t}</option>)}</Select>
-        <Select kind="category" aria-label="Category" value={get("cat")} onChange={(e) => go({ cat: e.target.value || null })}><option value="">All categories</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select>
+        <Select kind="category" aria-label="Category" value={get("cat")} onChange={(e) => go({ cat: e.target.value || null })}><option value="">All categories</option>{groupedCategoryOptions(categories)}</Select>
         <Select kind="method" aria-label="Payment method" value={get("method")} onChange={(e) => go({ method: e.target.value || null })}><option value="">All payment methods</option>{methods.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}</Select>
         <Select aria-label="Online or offline" value={get("channel")} onChange={(e) => go({ channel: e.target.value || null })}><option value="">Online & offline</option><option value="online">Online</option><option value="offline">Offline</option></Select>
         <Select aria-label="Sort" value={get("sort") || "newest"} onChange={(e) => go({ sort: e.target.value === "newest" ? null : e.target.value })}>{Object.entries(SORTS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>

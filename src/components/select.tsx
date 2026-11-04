@@ -7,13 +7,14 @@ import { cn } from "./ui";
 
 type OptionEl = ReactElement<{ value?: string | number; children?: ReactNode }>;
 /** Reads <option> children (also inside fragments and .map arrays) the way a native <select> would. */
-function collect(children: ReactNode, out: { value: string; label: string }[]) {
+function collect(children: ReactNode, out: { value: string; label: string; group?: string }[], group?: string) {
   Children.forEach(children, (c) => {
     if (!isValidElement(c)) return;
     if (c.type === "option") {
       const p = (c as OptionEl).props; const label = Children.toArray(p.children).filter((x) => typeof x === "string" || typeof x === "number").join("");
-      const v = p.value != null ? String(p.value) : label; out.push({ value: v, label: label === v && /^[a-z][a-z _-]*$/.test(label) ? label.charAt(0).toUpperCase() + label.slice(1) : label }); // "monthly" -> "Monthly"
-    } else collect((c.props as { children?: ReactNode }).children, out);
+      const v = p.value != null ? String(p.value) : label; out.push({ value: v, label: label === v && /^[a-z][a-z _-]*$/.test(label) ? label.charAt(0).toUpperCase() + label.slice(1) : label, group }); // "monthly" -> "Monthly"
+    } else if (c.type === "optgroup") collect((c.props as { children?: ReactNode }).children, out, String((c.props as { label?: string }).label ?? ""));
+    else collect((c.props as { children?: ReactNode }).children, out, group);
   });
 }
 
@@ -26,11 +27,11 @@ export function Select({ name, value, defaultValue, onChange, children, classNam
   name?: string; value?: string; defaultValue?: string; onChange?: (e: { target: { value: string } }) => void; children?: ReactNode; className?: string; required?: boolean; disabled?: boolean;
   kind?: "category" | "method"; id?: string; "aria-label"?: string; "aria-invalid"?: boolean;
 }) {
-  const items: { value: string; label: string }[] = []; collect(children, items);
+  const items: { value: string; label: string; group?: string }[] = []; collect(children, items);
   const [inner, setInner] = useState(defaultValue ?? items[0]?.value ?? ""); const controlled = value !== undefined; const cur = controlled ? value : inner;
   const options: Opt[] = items.map((o) => {
     const v = kind === "category" && o.value ? categoryVisual(o.label) : kind === "method" && o.value ? methodVisualByLabel(o.label) : kind && !o.value ? { icon: Tag, hue: 230 } : undefined;
-    return { value: o.value, label: o.label, ...(v ?? {}) };
+    return { value: o.value, label: o.label, group: o.group, solid: kind === "category" && !!o.value, ...(v ?? {}) };
   });
   return (
     <div className={cn("relative min-w-0", className, disabled && "pointer-events-none opacity-50")} id={id}>

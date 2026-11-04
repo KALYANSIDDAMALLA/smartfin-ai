@@ -43,3 +43,12 @@ describe("multi-line PDF statements", () => {
   it("still reads simple one-line statements the old way", () => expect(parseStatementText("01/11/2026 UPI-SWIGGY 450.00 Dr 10,000.00 Cr\nheader line")).toEqual([{ Date: "01/11/2026", Description: "UPI-SWIGGY", Amount: "450.00 Dr" }]));
   it("finds nothing in text that has no transactions", () => expect(parseStatementText("Hello\nThis is not a statement\n12 pages")).toEqual([]));
 });
+
+describe("column detection", () => {
+  it("does not read the Description column as Credit (it contains the letters 'cr')", () => { const m = detectMapping(["Date", "Description", "Debit", "Credit"]); expect(m.credit).toBe("Credit"); expect(m.debit).toBe("Debit"); expect(m.description).toBe("Description"); });
+  it("still understands short and long bank headers", () => {
+    expect(detectMapping(["Txn Date", "Narration", "Withdrawal (Dr.)", "Deposit (Cr.)", "Balance"])).toMatchObject({ date: "Txn Date", description: "Narration", debit: "Withdrawal (Dr.)", credit: "Deposit (Cr.)" });
+    expect(detectMapping(["Date", "Particulars", "Dr", "Cr"])).toMatchObject({ debit: "Dr", credit: "Cr" });
+  });
+  it("reads a credit row of a Date/Description/Debit/Credit CSV as income", () => { const m = detectMapping(["Date", "Description", "Debit", "Credit"]); const p = applyMapping({ Date: "02/11/2026", Description: "SALARY", Debit: "", Credit: "50000.00" }, m, "Asia/Kolkata"); expect(p.txType).toBe("income"); expect(p.amountMinor).toBe(5000000); });
+});

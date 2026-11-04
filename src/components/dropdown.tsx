@@ -4,8 +4,8 @@ import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search, type LucideIcon } from "lucide-react";
 import { cn } from "./ui";
 
-export interface Opt { value: string; label: string; sub?: string; icon?: LucideIcon; hue?: number; group?: string; logo?: string }
-const chip = (hue?: number) => (hue == null ? undefined : { background: `hsl(${hue} 80% 55% / .16)`, color: `hsl(${hue} 70% 52%)` });
+export interface Opt { value: string; label: string; sub?: string; icon?: LucideIcon; hue?: number; group?: string; logo?: string; solid?: boolean }
+const chip = (hue?: number, solid?: boolean) => (hue == null ? undefined : solid ? { background: `linear-gradient(135deg, hsl(${hue} 85% 62%), hsl(${(hue + 32) % 360} 78% 48%))`, color: "#fff", boxShadow: `0 1px 3px hsl(${hue} 70% 40% / .35)` } : { background: `hsl(${hue} 80% 55% / .16)`, color: `hsl(${hue} 70% 52%)` });
 
 /** Tile in front of an option: its logo when it has one and the picture loads, otherwise the coloured icon. */
 function OptIcon({ o, box, icon }: { o: Opt; box: string; icon: number }) {
@@ -15,7 +15,7 @@ function OptIcon({ o, box, icon }: { o: Opt; box: string; icon: number }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={o.logo} alt="" width={20} height={20} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setBad(true)} className="h-5 w-5 object-contain" /></span>);
   if (!Icon) return null;
-  return <span className={cn("grid shrink-0 place-items-center rounded-md", box)} style={chip(o.hue)}><Icon size={icon} aria-hidden /></span>;
+  return <span className={cn("grid shrink-0 place-items-center rounded-md", box)} style={chip(o.hue, o.solid)}><Icon size={icon} aria-hidden /></span>;
 }
 
 /**

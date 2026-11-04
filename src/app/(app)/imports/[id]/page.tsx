@@ -7,6 +7,7 @@ import { ActionForm } from "@/components/action-form";
 import { Badge, Card, Field, Input, PageHeader, Select } from "@/components/ui";
 import { NumInput } from "@/components/num-input";
 import { Pagination } from "@/components/pagination";
+import { TypeCategoryFields } from "@/components/type-category-fields";
 
 const SIZES = [25, 50, 100];
 export default async function Review({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string; size?: string }> }) {
@@ -38,8 +39,7 @@ export default async function Review({ params, searchParams }: { params: Promise
                 <Field label="Date (DD/MM/YYYY)"><Input name="date" defaultValue={r.occurred_at ? new Date(r.occurred_at).toLocaleDateString("en-GB", { timeZone: profile.timezone }) : ""} /></Field>
                 <div className="sm:col-span-2"><Field label="Description"><Input name="description" defaultValue={r.description ?? ""} /></Field></div>
                 <Field label="Amount (₹)"><NumInput name="amount" defaultValue={r.amount_minor ? String(Number(r.amount_minor) / 100) : ""} /></Field>
-                <Field label="Type"><Select name="txType" defaultValue={r.tx_type ?? "expense"}><option value="expense">Expense</option><option value="income">Income</option></Select></Field>
-                <Field label="Category"><Select kind="category" name="categoryId" defaultValue={r.category_id ?? ""}><option value="">—</option>{lookups.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field></div>
+                <TypeCategoryFields type={r.tx_type ?? "expense"} categoryId={r.category_id ?? ""} categories={lookups.categories} /></div>
               <label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" name="include" defaultChecked={r.include} /> Import this row{r.amount_minor ? ` (${formatMoney(Number(r.amount_minor), profile.currency)})` : ""}</label>
             </ActionForm></Card>))}</div>
         <Pagination page={page} pages={pages} size={size} count={count} sizes={SIZES} hrefFor={pageHref} />
