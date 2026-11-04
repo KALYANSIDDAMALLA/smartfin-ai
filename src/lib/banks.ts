@@ -15,10 +15,10 @@ const DOMAINS: Record<string, string> = {
   "state-bank-of-india": "sbi.co.in", "hdfc-bank": "hdfcbank.com", "icici-bank": "icicibank.com", "axis-bank": "axisbank.com", "kotak-mahindra-bank": "kotak.com", "punjab-national-bank": "pnbindia.in",
   "bank-of-baroda": "bankofbaroda.in", "canara-bank": "canarabank.com", "union-bank-of-india": "unionbankofindia.co.in", "bank-of-india": "bankofindia.co.in", "indian-bank": "indianbank.in", "central-bank-of-india": "centralbankofindia.co.in",
   "uco-bank": "ucobank.com", "indian-overseas-bank": "iob.in", "bank-of-maharashtra": "bankofmaharashtra.in", "punjab-and-sind-bank": "psbindia.com",
-  "idfc-first-bank": "idfcfirstbank.com", "indusind-bank": "indusind.com", "yes-bank": "yesbank.in", "federal-bank": "federalbank.co.in", "rbl-bank": "rblbank.com", "south-indian-bank": "southindianbank.com", "karur-vysya-bank": "kvb.co.in",
+  "idfc-first-bank": "idfcfirstbank.com", "indusind-bank": "indusind.com", "yes-bank": "yesbank.in", "federal-bank": "federalbank.co.in", "rbl-bank": "rblbank.com", "south-indian-bank": "southindianbank.com", "karur-vysya-bank": "kvb.bank.in",
   "city-union-bank": "cityunionbank.com", "tamilnad-mercantile-bank": "tmb.in", "dcb-bank": "dcbbank.com", "karnataka-bank": "karnatakabank.com", "jammu-and-kashmir-bank": "jkbank.com", "dhanlaxmi-bank": "dhanbank.com", "csb-bank": "csb.co.in",
   "au-small-finance-bank": "aubank.in", "equitas-small-finance-bank": "equitasbank.com", "ujjivan-small-finance-bank": "ujjivansfb.in", "bandhan-bank": "bandhanbank.com", "jana-small-finance-bank": "janabank.com",
-  "paytm-payments-bank": "paytmbank.com", "airtel-payments-bank": "airtelbank.com", "india-post-payments-bank": "ippbonline.com", "fino-payments-bank": "finobank.com", "jio-payments-bank": "jiopaymentsbank.com",
+  "paytm-payments-bank": "paytm.com", "airtel-payments-bank": "airtelpaymentsbank.in", "india-post-payments-bank": "ippb.in", "fino-payments-bank": "finobank.com", "jio-payments-bank": "jio.com",
 };
 /**
  * The bank's own icon, from Google's public icon service (no key; `fallback_opts` makes it answer "not found" instead of a generic globe). It is only requested when a bank picker or list is shown, and the browser is told not to send
