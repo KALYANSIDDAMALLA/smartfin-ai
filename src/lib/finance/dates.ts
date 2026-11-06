@@ -54,7 +54,25 @@ export function previousRange(r: Range, preset: Preset | "custom", tz = DEFAULT_
   return { start: startOfLocalDay(addDaysYmd(localDate(r.start, tz), -days), tz), end: r.start };
 }
 
+/**
+ * Like-for-like comparison window: when the current period is still running (e.g. 1 day into the month),
+ * compare it with the same elapsed time of the previous period instead of the whole previous period.
+ * Finished periods (and custom ranges in the past) are returned unchanged.
+ */
+export function likeForLike(cur: Range, prev: Range, now: Date): Range {
+  if (now.getTime() >= cur.end.getTime() || now.getTime() < cur.start.getTime()) return prev;
+  const end = Math.min(prev.end.getTime(), prev.start.getTime() + (now.getTime() - cur.start.getTime()));
+  return { start: prev.start, end: new Date(end) };
+}
+
 export const inRange = (iso: string, r: Range) => {
   const t = new Date(iso).getTime();
   return t >= r.start.getTime() && t < r.end.getTime();
 };
+
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** "2026-11-01" -> "1 Nov 2026" (a plain calendar date, no timezone shift). */
+export function formatYmd(ymd: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd); if (!m) return ymd;
+  return `${Number(m[3])} ${MON[Number(m[2]) - 1]} ${m[1]}`;
+}

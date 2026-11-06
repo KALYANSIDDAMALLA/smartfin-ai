@@ -1,0 +1,11 @@
+# Known limitations / launch blockers
+- **Bank sync (Account Aggregator via Setu) is built but untested against a live sandbox** — needs Setu credentials (docs/ACCOUNT_AGGREGATOR.md). UPI-app APIs (PhonePe etc.) do not exist for consumers.
+- **Email and push notifications are not active** (toggles stored; no provider wired). In-app notifications work.
+- **Rate limiting is in-memory per instance**; use Redis/Upstash before multi-instance production.
+- **Quiet hours** for notifications are not implemented.
+- `xlsx` 0.18.5 has known advisories (prototype pollution/ReDoS); mitigated by size caps, no formula/style parsing, and server-only use — consider a maintained alternative. Run `npm audit` before launch.
+- PDF/receipt extraction is heuristic and always requires review. Scanned (image-only) PDFs are not OCR'd.
+- Accounts/balance tracking UI (transfers, credit-card settlement entry, estimated balance) has accounting support in `src/lib/finance` but no screens yet.
+- Editing a transaction in the UI, custom categories UI, and notification-driven recurring reminders are not built.
+- Legal review of privacy policy/terms, data retention policy and any regulatory obligations (e.g. India DPDP Act) is required before public launch. No compliance is claimed.
+- Playwright E2E specs are provided but were not run against a live staging project in development.

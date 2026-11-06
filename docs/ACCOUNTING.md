@@ -1,0 +1,11 @@
+# Accounting rules (implemented in `src/lib/finance`, covered by `tests/unit`)
+- Money is integer paise everywhere (`bigint` in DB). Never floats.
+- Income adds to income. Expense adds to expenses (credit-card purchases count when purchased).
+- Transfers (incl. credit-card bill settlement) and adjustments are never income/expense.
+- Refunds reduce net expense and inherit category/channel/method from the original expense; total refunds can't exceed it.
+- Goal contributions/withdrawals live in `goal_contributions` — savings allocations, never transactions; withdrawals are negative rows and can't exceed contributed.
+- Net cash flow = income − net expenses. Savings rate = floor((income − net expenses) × 100 ÷ income), null when income is 0.
+- Budgets: spent = expenses − refunds in the period, filtered by category/channel; thresholds alert once per budget+period (DB primary key).
+- Deleting a transaction is a soft delete (`deleted_at`); deleted rows are excluded from all totals. Updates/deletes are written to `audit_events`.
+- Periods use the user's time zone, half-open `[start, end)`, weeks start Monday.
+- Imports de-duplicate on external reference, then (local date, amount, normalised description), including within a batch; re-checked at confirmation.
