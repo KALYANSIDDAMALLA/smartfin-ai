@@ -2,7 +2,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/server/auth";
 import { uploadImport, cancelImport } from "@/app/actions/imports";
 import { ActionForm } from "@/components/action-form";
-import { Badge, Card, EmptyState, Field, PageHeader, Table, Td, Th, inputCls } from "@/components/ui";
+import { ImportFileField } from "@/components/import-file-field";
+import { Badge, Card, EmptyState, PageHeader, Table, Td, Th } from "@/components/ui";
 
 const TONE = { confirmed: "good", failed: "bad", preview: "warn", cancelled: "neutral", uploaded: "info", processing: "info" } as const;
 
@@ -16,7 +17,7 @@ export default async function Imports() {
     <>
       <PageHeader title="Imports & receipts" desc={<SummaryLine pill={data?.length ? <><span className="tabnum">{data.length}</span> import{data.length === 1 ? "" : "s"}</> : "No imports yet"} items={[!!data?.length && `last on ${formatYmd(localDate(data[0].created_at))}`, { t: "nothing is added until you review and confirm", small: true }]} />} />
       <div className="grid gap-6">
-        <Card><ActionForm action={uploadImport} submit="Upload & preview"><Field label="File (max 10 MB)" hint="CSV, XLSX, PDF, PNG or JPG. Files are stored privately and only parsed — never executed."><input type="file" name="file" required accept=".csv,.xlsx,.pdf,.png,.jpg,.jpeg" className={inputCls + " py-1.5"} /></Field></ActionForm>
+        <Card><ActionForm action={uploadImport} submit="Upload & preview"><ImportFileField /></ActionForm>
           <p className="mt-3 text-xs text-muted">PDF and receipt extraction is heuristic: expect to review every row. Receipt OCR requires an AI provider key.</p></Card>
         <Card><h2 className="mb-3 font-medium">Import history</h2>
           {!data?.length ? <EmptyState title="No imports yet" /> : <Table><thead><tr><Th>File</Th><Th>Status</Th><Th className="hidden md:table-cell">Uploaded</Th><Th><span className="sr-only">Actions</span></Th></tr></thead><tbody>

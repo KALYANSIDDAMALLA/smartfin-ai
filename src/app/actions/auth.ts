@@ -144,7 +144,7 @@ export async function resetPassword(_: FormState, fd: FormData): Promise<FormSta
   redirect("/dashboard");
 }
 
-export async function logout() { const sb = await createClient(); await sb.auth.signOut(); redirect("/login"); }
+export async function logout() { const sb = await createClient(); await sb.auth.signOut(); redirect("/"); }
 
 /** Sends a 6-digit code to the phone number (test mode shows it on the page in development). */
 export async function sendPhoneCode(_: FormState, fd: FormData): Promise<FormState> {

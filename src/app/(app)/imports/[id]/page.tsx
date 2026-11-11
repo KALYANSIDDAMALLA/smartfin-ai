@@ -26,7 +26,7 @@ export default async function Review({ params, searchParams }: { params: Promise
     <>
       <PageHeader title={`Review: ${b.file_name}`} desc={`${count.toLocaleString("en-IN")} rows found · ${(selected ?? 0).toLocaleString("en-IN")} selected. Duplicates and incomplete rows are unchecked by default.`} />
       <div className="grid gap-6">
-        {!["image", "aa"].includes(b.file_kind) && headers.length > 0 && <Card><details><summary className="cursor-pointer font-medium">Column mapping</summary><div className="mt-3"><ActionForm action={remapImport} submit="Apply mapping"><input type="hidden" name="id" value={id} />
+        {!["image", "aa", "sms"].includes(b.file_kind) && headers.length > 0 && <Card><details><summary className="cursor-pointer font-medium">Column mapping</summary><div className="mt-3"><ActionForm action={remapImport} submit="Apply mapping"><input type="hidden" name="id" value={id} />
           <div className="grid gap-3 sm:grid-cols-3">{opt("date", "Date")}{opt("description", "Description")}{opt("amount", "Amount (signed)")}{opt("debit", "Debit / withdrawal")}{opt("credit", "Credit / deposit")}{opt("ref", "Reference no.")}</div></ActionForm></div></details></Card>}
         <div className="grid gap-3">{(rows ?? []).map((r) => (
           <Card key={r.id} className={r.is_duplicate ? "border-warn/50" : ""}>

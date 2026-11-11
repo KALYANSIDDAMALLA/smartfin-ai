@@ -3,6 +3,7 @@ import { CheckCircle2, KeyRound, Landmark, ShieldCheck, Smartphone } from "lucid
 import { requireUser } from "@/lib/server/auth";
 import { bankLinkingOn, setuSandbox } from "@/lib/integrations/setu";
 import { connectDemoBank, disconnectBank, loadDemoTransactions, refreshConnection, syncConnection } from "@/app/actions/integrations";
+import { SmsForward } from "@/components/sms-forward";
 import { ActionForm } from "@/components/action-form";
 import { BankLinkForm } from "@/components/bank-forms";
 import { BankMark } from "@/components/bank-mark";
@@ -23,9 +24,10 @@ type Meta = { bank?: string; mobileLast4?: string; demo?: boolean; accounts?: { 
 
 export default async function BankLinks() {
   const { supabase, profile } = await requireUser(); const live = bankLinkingOn(); const sandbox = live && setuSandbox();
-  const [{ data: conns }, { data: consents }] = await Promise.all([
+  const [{ data: conns }, { data: consents }, { data: sms }] = await Promise.all([
     supabase.from("integration_connections").select("*").eq("provider", "account_aggregator").neq("status", "revoked").order("created_at", { ascending: false }),
     supabase.from("integration_consents").select("*").order("created_at", { ascending: false }).limit(20),
+    supabase.from("sms_forwarding").select("token_hint,last_used_at,received_count").maybeSingle(), // column-limited: the token hash is never readable by the browser role
   ]);
   const hasDemo = (conns ?? []).some((c) => (c.meta as Meta | null)?.demo);
   const linked = (conns ?? []).filter((c) => c.status === "connected").length;
@@ -59,6 +61,12 @@ export default async function BankLinks() {
               {c.status === "connected" && meta.demo && <ActionForm action={loadDemoTransactions} compact submit="Load sample transactions" variant="outline"><input type="hidden" name="id" value={c.id} /></ActionForm>}
               {c.status === "connected" && !meta.demo && <ActionForm action={syncConnection} compact submit="Fetch transactions now" variant="outline"><input type="hidden" name="id" value={c.id} /></ActionForm>}
               <ActionForm action={disconnectBank} compact submit="Disconnect" variant="danger" confirm={`Stop sharing data from ${bank}? Transactions already saved stay.`}><input type="hidden" name="id" value={c.id} /></ActionForm></div></div></li>); })}</ul></Card>}
+
+        <Card>
+          <h2 className="mb-1 flex items-center gap-2 font-medium"><Smartphone size={16} className="text-brand" aria-hidden />Instant bank alerts (SMS)</h2>
+          <p className="mb-4 text-sm text-muted">Your bank texts you the moment money moves. Forward those texts from your phone and they show up here within seconds, ready to confirm. Works with any bank, with no approval needed.</p>
+          <SmsForward active={!!sms} hint={sms?.token_hint} count={sms?.received_count} lastUsed={sms?.last_used_at ? new Date(sms.last_used_at).toLocaleString("en-IN", { timeZone: profile.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : undefined} />
+        </Card>
 
         <Card><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-medium">Prefer not to link?</h2><p className="text-sm text-muted">Import a bank statement (CSV, Excel or PDF) or add transactions yourself. Both always work.</p></div>
           <Link href="/imports" className="inline-flex h-10 items-center rounded-lg border border-line px-4 text-sm font-medium transition hover:border-brand/50 hover:bg-brand/10">Import a statement</Link></div></Card>

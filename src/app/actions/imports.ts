@@ -32,6 +32,9 @@ export async function uploadImport(_: FormState, fd: FormData): Promise<FormStat
   if (!EXT_OK.includes(ext)) return { error: "Unsupported file type. Use CSV, XLSX, PDF, PNG or JPG." };
   if (!MIME_OK[ext].includes(file.type)) return { error: "File type does not match its extension." };
   const buf = new Uint8Array(await file.arrayBuffer());
+  // Password-protected Excel files are an old OLE container, not a zip, so they would be rejected below as "not a valid .xlsx". Say what is really wrong.
+  if (ext === "xlsx" && buf[0] === 0xd0 && buf[1] === 0xcf && buf[2] === 0x11 && buf[3] === 0xe0) return { error: "This Excel file is password-protected, and protected Excel files can't be opened here. In Excel use File > Info > Protect Workbook > Encrypt with Password, clear the password, save, and upload again. Or upload the bank's PDF or CSV statement instead." };
+  const filePassword = String(fd.get("password") ?? "").slice(0, 200); // used only to open this PDF in memory; never stored or logged
   const kind = sniffKind(buf, ext); if (!kind) return { error: "File content does not look like a valid ." + ext + " file." };
   const { data: prof } = await a.supabase.from("profiles").select("timezone").eq("id", a.user.id).single(); const tz = prof?.timezone ?? "Asia/Kolkata";
   const id = randomUUID(); const path = `${a.user.id}/imports/${id}.${ext}`; // server-generated name; user filename is metadata only
@@ -49,7 +52,7 @@ export async function uploadImport(_: FormState, fd: FormData): Promise<FormStat
       const wb = XLSX.read(buf, { type: "array", cellFormula: false, cellHTML: false, cellStyles: false, sheetRows: MAX_ROWS + 1 });
       const sheet = wb.Sheets[wb.SheetNames[0]]; raws = XLSX.utils.sheet_to_json<RawRow>(sheet, { raw: false, defval: "" }); map = detectMapping(Object.keys(raws[0] ?? {}));
     } else if (kind === "pdf") {
-      const { PDFParse } = await import("pdf-parse"); const parser = new PDFParse({ data: buf }); const t = await parser.getText(); await parser.destroy();
+      const { PDFParse } = await import("pdf-parse"); const parser = new PDFParse({ data: buf, ...(filePassword ? { password: filePassword } : {}) }); let t; try { t = await parser.getText(); } finally { await parser.destroy().catch(() => {}); }
       raws = parseStatementText(t.text).slice(0, MAX_ROWS); map = detectMapping(["Date", "Description", "Amount"]);
       pre = raws.map(() => ({ confidence: 0.7 })); // text-extraction of PDFs is heuristic: always needs review
     } else {
@@ -60,6 +63,10 @@ export async function uploadImport(_: FormState, fd: FormData): Promise<FormStat
     await stage(a.supabase, a.user.id, id, raws, map, tz, pre);
     await a.supabase.from("import_batches").update({ status: "preview" }).eq("id", id);
   } catch (e) {
+    if (kind === "pdf" && (/password/i.test((e as Error).name) || /password/i.test((e as Error).message))) { // locked PDF: don't leave a failed import behind, just ask for the password
+      await a.supabase.storage.from("private-files").remove([path]); await a.supabase.from("import_batches").delete().eq("id", id);
+      return { error: filePassword ? "That password didn't open the PDF. Check it and try again. Banks often use your date of birth (DDMMYYYY or DDMMYY), customer ID, mobile number or the first letters of your name plus your birth date." : "This PDF is password-protected. Enter its password in the box below the file and upload again." };
+    }
     await a.supabase.from("import_batches").update({ status: "failed", error: (e as Error).message.slice(0, 300) }).eq("id", id);
     await notify(a.user.id, "import", "Import failed", safeName);
     revalidatePath("/imports"); return { error: `Could not read this file: ${(e as Error).message.slice(0, 200)}` };
@@ -108,7 +115,7 @@ export async function confirmImport(_: FormState, fd: FormData): Promise<FormSta
   const { data: prof } = await a.supabase.from("profiles").select("timezone").eq("id", a.user.id).single(); const tz = prof?.timezone ?? "Asia/Kolkata";
   const { txs } = await loadTxs(a.supabase, undefined, ...dupWindow(ok.map((r) => r.occurred_at)), false);
   const dups = detectDuplicates(ok.map((r) => ({ amountMinor: Number(r.amount_minor), occurredAt: r.occurred_at, description: r.description, externalRef: r.external_ref })), txs.map((t) => ({ amountMinor: t.amountMinor, occurredAt: t.occurredAt, merchant: t.merchant ?? t.description, externalRef: t.externalRef })), tz);
-  const src = { csv: "import_csv", xlsx: "import_xlsx", pdf: "import_pdf", image: "receipt_ocr", aa: "integration" }[b.file_kind as "csv"];
+  const src = { csv: "import_csv", xlsx: "import_xlsx", pdf: "import_pdf", image: "receipt_ocr", aa: "integration", sms: "integration" }[b.file_kind as "csv"];
   const fresh = ok.filter((_, i) => !dups[i].duplicate);
   const ins = fresh.map((r) => ({ user_id: a.user.id, type: r.tx_type ?? "expense", amount_minor: r.amount_minor, occurred_at: r.occurred_at, name: r.description?.slice(0, 200) ?? null, merchant: r.merchant?.slice(0, 200) ?? null, description: r.description, category_id: r.category_id, external_ref: r.external_ref, source: src, import_batch_id: id }));
   for (let i = 0; i < ins.length; i += 500) { const { error } = await a.supabase.from("transactions").insert(ins.slice(i, i + 500)); if (error) return { error: error.code === "23505" ? "Some rows already exist; review duplicates." : "Could not create transactions." }; }
