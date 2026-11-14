@@ -11,7 +11,7 @@ import { mailConfigured, resetEmail, sendMail, verificationEmail } from "@/lib/s
 import { checkEmailCode, checkEmailProof, checkPhoneCode, checkProof, currentEmailCode, makeEmailProof, makeProof, phoneOtpAvailable, sendPhoneCode as sendCode, validPhone } from "@/lib/server/phone-otp";
 
 /** `fields` maps a form field name to its own error message, shown under that field. */
-export type FormState = { error?: string; ok?: string; fields?: Record<string, string>; testCode?: string; proof?: string } | undefined;
+export type FormState = { error?: string; ok?: string; fields?: Record<string, string>; testCode?: string; proof?: string; redirectTo?: string } | undefined;
 const email = z.string().trim().toLowerCase().email();
 const password = z.string().min(8, "Password must be at least 8 characters").max(128);
 const matches = <T extends { password: string; confirm?: string }>(d: T) => d.password === d.confirm;
@@ -61,7 +61,9 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
   const { error } = await sb.auth.signInWithPassword(p.data);
   if (error) return { error: error.message.includes("not confirmed") ? "Please verify your email first." : "Invalid email or password." };
   const next = String(fd.get("next") ?? "/dashboard");
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
+  // Not redirect(): inside a server action that would make this request wait for the WHOLE destination page to render. Returning the target lets
+  // the browser navigate itself, so the page's loading skeleton shows at once and the content streams in.
+  return { redirectTo: next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard" };
 }
 
 /** Resends the sign-up verification email. Same response whether or not the account exists. */

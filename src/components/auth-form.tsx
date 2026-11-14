@@ -1,6 +1,7 @@
 "use client";
-import { useActionState, useId, useState, useTransition } from "react";
+import { useActionState, useEffect, useId, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Eye, EyeOff, Lock, Mail, Phone, User, type LucideIcon } from "lucide-react";
 import { Button, ErrorNote, cn, inputCls } from "./ui";
 import { resendVerification, sendEmailCode, sendPhoneCode, verifyEmailCode, verifyEmailProof, verifyPhoneCode, type FormState } from "@/app/actions/auth";
@@ -56,6 +57,8 @@ function AuthField({ id, label, icon: Icon, error, hint, children, trailing, asi
 
 export function AuthForm({ mode, action, next, phoneOtp = false, emailCodes = false }: { mode: Mode; action: (s: FormState, f: FormData) => Promise<FormState>; next?: string; phoneOtp?: boolean; emailCodes?: boolean }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const router = useRouter(); const navigating = !!state?.redirectTo; // signed in: go to the page now (its skeleton shows instantly)
+  useEffect(() => { if (state?.redirectTo) router.replace(state.redirectTo); }, [state?.redirectTo, router]);
   const uid = useId();
   const [v, setV] = useState<Values>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -168,7 +171,7 @@ export function AuthForm({ mode, action, next, phoneOtp = false, emailCodes = fa
         <Recaptcha resetSignal={state} error={captchaErr} onSolve={() => setCaptchaErr(undefined)} />
       </div>}
       {next && <input type="hidden" name="next" value={next} />}
-      <div className={full}><Button disabled={pending || sent} className="h-10 w-full">{sent ? "Check your email to continue" : pending ? "Please wait…" : <>{title}<ArrowRight size={16} aria-hidden /></>}</Button></div>
+      <div className={full}><Button disabled={pending || sent || navigating} className="h-10 w-full">{sent ? "Check your email to continue" : navigating ? "Opening your dashboard…" : pending ? "Please wait…" : <>{title}<ArrowRight size={16} aria-hidden /></>}</Button></div>
       {mode === "forgot" && <div className={cn("flex flex-wrap justify-between gap-2 border-t border-line pt-3 text-sm text-muted", full)}><Link href="/login" className="inline-block py-2 text-brand hover:underline">← Back to log in</Link></div>}
     </form>
   );
