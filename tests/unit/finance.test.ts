@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { parseMoney, formatMoney, percent, allocate, sum } from "@/lib/finance/money";
 import { summarize, estimatedBalance } from "@/lib/finance/accounting";
 import { bucketLabel } from "@/lib/finance/trends";
-import { presetRange, customRange, previousRange, localDate, likeForLike } from "@/lib/finance/dates";
+import { presetRange, customRange, previousRange, localDate, likeForLike, isoToLocalInput, localInputToIso } from "@/lib/finance/dates";
 import { evaluateBudget, newlyCrossedThresholds, type BudgetDef } from "@/lib/finance/budget";
 import { goalProgress, crossedMilestones, estimatedCompletion, monthsBetween } from "@/lib/finance/goals";
 import { planSavings } from "@/lib/finance/savings";
@@ -279,14 +279,14 @@ import { vi, afterEach } from "vitest";
 describe("setu client request shaping", () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
   it("sends credentials as headers, never in the URL, and parses provider errors", async () => {
-    vi.stubEnv("SETU_CLIENT_ID", "cid"); vi.stubEnv("SETU_CLIENT_SECRET", "sec"); vi.stubEnv("SETU_PRODUCT_INSTANCE_ID", "pid");
+    vi.stubEnv("SETU_CLIENT_ID", "cid"); vi.stubEnv("SETU_CLIENT_SECRET", "sec"); vi.stubEnv("SETU_PRODUCT_INSTANCE_ID", "pid"); vi.stubEnv("SETU_VUA_HANDLE", "finvu");
     const calls: { url: string; init: RequestInit }[] = [];
     vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => { calls.push({ url, init }); return calls.length === 1 ? new Response(JSON.stringify({ id: "c1", url: "https://consent", status: "PENDING" }), { status: 200 }) : new Response(JSON.stringify({ errorCode: "NotFound", errorMsg: "Consent not found" }), { status: 404 }); }));
     const { createConsent, getConsent, SetuError } = await import("@/lib/integrations/setu");
     const c = await createConsent({ vua: "9876543210", from: new Date("2025-11-01"), to: new Date("2026-11-01"), months: 12 });
     expect(c.id).toBe("c1"); expect(calls[0].url).toBe("https://fiu-sandbox.setu.co/v2/consents"); expect(calls[0].url).not.toContain("sec");
     expect(calls[0].init.headers).toMatchObject({ "x-client-id": "cid", "x-client-secret": "sec", "x-product-instance-id": "pid" });
-    expect(JSON.parse(calls[0].init.body as string)).toMatchObject({ vua: "9876543210", consentDuration: { unit: "MONTH", value: "12" } });
+    expect(JSON.parse(calls[0].init.body as string)).toMatchObject({ vua: "9876543210@finvu", consentDuration: { unit: "MONTH", value: "12" } });
     await expect(getConsent("zzz")).rejects.toMatchObject({ status: 404, code: "NotFound" });
     expect(SetuError).toBeDefined();
   });
@@ -469,4 +469,17 @@ describe("calendar", () => {
     const r = dayTotals([t("1", "expense", 1000, "2026-10-31T20:00:00Z"), t("2", "refund", 300, "2026-10-31T20:30:00Z"), t("3", "income", 5000, "2026-11-01T05:00:00Z"), t("4", "transfer", 900, "2026-11-01T06:00:00Z")], "Asia/Kolkata");
     expect(r["2026-11-01"]).toEqual({ incomeMinor: 5000, expenseMinor: 700, count: 3 }); // 20:00Z = 01:30 IST next day
   });
+});
+
+describe("datetime-local <-> instant in the user's timezone", () => {
+  it("reads wall-clock time in the given zone (IST is UTC+5:30) regardless of server tz", () => {
+    expect(localInputToIso("2026-11-01T20:00", "Asia/Kolkata")).toBe("2026-11-01T14:30:00.000Z");
+    expect(localInputToIso("2026-11-01T20:00", "UTC")).toBe("2026-11-01T20:00:00.000Z");
+  });
+  it("round-trips, so editing a transaction never shifts its time", () => {
+    const iso = "2026-03-31T18:45:00.000Z";
+    for (const tz of ["Asia/Kolkata", "America/New_York", "UTC"]) expect(localInputToIso(isoToLocalInput(iso, tz), tz)).toBe(iso);
+    expect(isoToLocalInput("2026-11-01T14:30:00.000Z", "Asia/Kolkata")).toBe("2026-11-01T20:00");
+  });
+  it("rejects values that aren't a datetime-local string", () => { expect(localInputToIso("garbage")).toBeUndefined(); expect(localInputToIso("2026-11-01T20:00:00Z")).toBeUndefined(); });
 });

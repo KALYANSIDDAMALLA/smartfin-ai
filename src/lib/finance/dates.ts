@@ -76,3 +76,13 @@ export function formatYmd(ymd: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd); if (!m) return ymd;
   return `${Number(m[3])} ${MON[Number(m[2]) - 1]} ${m[1]}`;
 }
+
+/** An instant as the value of a <input type="datetime-local"> ("2026-11-01T20:00") in the given timezone. */
+export function isoToLocalInput(iso: string | Date, tz = DEFAULT_TZ): string {
+  return formatInTimeZone(iso, tz, "yyyy-MM-dd'T'HH:mm");
+}
+/** A datetime-local value ("2026-11-01T20:00", no offset) read as wall-clock time in `tz` -> UTC ISO string. Undefined if it isn't one. */
+export function localInputToIso(v: string, tz = DEFAULT_TZ): string | undefined {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(v)) return undefined;
+  const d = fromZonedTime(v, tz); return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+}

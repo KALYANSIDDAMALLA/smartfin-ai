@@ -7,6 +7,7 @@ import { checkBudgetAlerts } from "@/lib/server/budget-alerts";
 import { notify } from "@/lib/server/notify";
 import { isUnusual } from "@/lib/finance/automation";
 import { formatMoney } from "@/lib/finance/money";
+import { localInputToIso } from "@/lib/finance/dates";
 import { applyTxFilters } from "@/lib/server/tx-filter";
 import { resolveRange, type SP } from "@/lib/server/range";
 import type { FormState } from "./auth";
@@ -28,6 +29,9 @@ export async function saveTransaction(_: FormState, fd: FormData): Promise<FormS
   const p = txSchema.safeParse(Object.fromEntries(fd));
   if (!p.success) { const fields: Record<string, string> = {}; for (const i of p.error.issues) { const k = String(i.path[0] ?? ""); if (k && !fields[k]) fields[k] = i.message; } return { error: p.error.issues[0].message, fields }; }
   const d = p.data; const id = fd.get("id") as string | null;
+  const { data: prof } = await auth.supabase.from("profiles").select("timezone").eq("id", auth.user.id).single();
+  // The form sends wall-clock time ("2026-11-01T20:00"); read it in the user's timezone, not the server's (UTC on Vercel), so saving and editing never shift it.
+  d.occurredAt = localInputToIso(String(fd.get("occurredAt") ?? ""), prof?.timezone ?? "Asia/Kolkata") ?? d.occurredAt;
   if (d.type === "refund" && !d.refundOfId) return { error: "Choose the expense this refund is for." };
   if (d.type === "transfer" && (!d.fromAccountId || !d.toAccountId)) return { error: "Transfers need both accounts." };
   if (d.type === "adjustment" && !d.direction) return { error: "Choose whether the adjustment adds or removes money." };
@@ -43,7 +47,6 @@ export async function saveTransaction(_: FormState, fd: FormData): Promise<FormS
     ? await auth.supabase.from("transactions").update({ ...values, user_id: undefined }).eq("id", id) // update triggers audit history
     : await auth.supabase.from("transactions").insert(values);
   if (res.error) return { error: res.error.code === "23505" ? "A transaction with this reference already exists." : "Could not save the transaction." };
-  const { data: prof } = await auth.supabase.from("profiles").select("timezone").eq("id", auth.user.id).single();
   if (d.type === "expense" && d.categoryId && !id) { // new expense: compare with this category's history (a prompt to review, never "fraud")
     const { data: hist } = await auth.supabase.from("transactions").select("amount_minor").eq("type", "expense").eq("category_id", d.categoryId).is("deleted_at", null).order("occurred_at", { ascending: false }).limit(200);
     const u = isUnusual(d.amount, (hist ?? []).map((r) => Number(r.amount_minor)).slice(1)); // slice(1): the row we just inserted is the newest
