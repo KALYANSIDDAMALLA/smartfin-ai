@@ -9,6 +9,9 @@ import { rateLimit } from "@/lib/server/ratelimit";
 import { loadTxs } from "@/lib/server/data";
 import { FILE_LIMIT } from "@/lib/server/validation";
 import { notify } from "@/lib/server/notify";
+import { checkBudgetAlerts } from "@/lib/server/budget-alerts";
+import { unusualInImport } from "@/lib/finance/automation";
+import { formatMoney } from "@/lib/finance/money";
 import { detectMapping, parseStatementText, sniffKind, type Mapping, type RawRow } from "@/lib/imports/parse";
 import { detectDuplicates } from "@/lib/imports/dedupe";
 import { stage, dupWindow } from "@/lib/server/staging";
@@ -120,8 +123,21 @@ export async function confirmImport(_: FormState, fd: FormData): Promise<FormSta
   const ins = fresh.map((r) => ({ user_id: a.user.id, type: r.tx_type ?? "expense", amount_minor: r.amount_minor, occurred_at: r.occurred_at, name: r.description?.slice(0, 200) ?? null, merchant: r.merchant?.slice(0, 200) ?? null, description: r.description, category_id: r.category_id, external_ref: r.external_ref, source: src, import_batch_id: id }));
   for (let i = 0; i < ins.length; i += 500) { const { error } = await a.supabase.from("transactions").insert(ins.slice(i, i + 500)); if (error) return { error: error.code === "23505" ? "Some rows already exist; review duplicates." : "Could not create transactions." }; }
   await a.supabase.from("import_batches").update({ status: "confirmed", confirmed_at: new Date().toISOString() }).eq("id", id);
+  // The same safety nets as adding a transaction by hand, run once for the whole import. They must never make a successful import look failed.
+  try {
+    const cats = [...new Set(fresh.filter((r) => (r.tx_type ?? "expense") === "expense" && r.category_id).map((r) => r.category_id as string))].slice(0, 15);
+    const history: Record<string, number[]> = {};
+    await Promise.all(cats.map(async (c) => { // history from before this import (its own rows are excluded), so a row is never compared with itself
+      const { data } = await a.supabase.from("transactions").select("amount_minor").eq("type", "expense").eq("category_id", c).is("deleted_at", null).or(`import_batch_id.is.null,import_batch_id.neq.${id}`).order("occurred_at", { ascending: false }).limit(200);
+      history[c] = (data ?? []).map((x) => Number(x.amount_minor));
+    }));
+    const flagged = unusualInImport(fresh.map((r) => ({ name: r.merchant ?? r.description, categoryId: r.category_id, amountMinor: Number(r.amount_minor), occurredAt: r.occurred_at, type: r.tx_type ?? "expense" })), history);
+    if (flagged.length) { const top = flagged[0]; // one summary, never one alert per row
+      await notify(a.user.id, "unusual", `${flagged.length} imported payment${flagged.length === 1 ? "" : "s"} to review`, `${flagged.length === 1 ? "It looks" : "They look"} much higher than usual. Biggest: ${formatMoney(top.amountMinor)}${top.name ? ` at ${String(top.name).slice(0, 40)}` : ""} (typically ~${formatMoney(top.typicalMinor)} in this category). This is a prompt to review, not a finding of fraud.`); }
+    await checkBudgetAlerts(a.supabase, a.user.id, tz);
+  } catch (e) { console.error("post-import checks failed:", (e as Error).message); }
   await notify(a.user.id, "import", "Import complete", `${ins.length} transactions added, ${ok.length - ins.length} duplicates skipped.`);
-  revalidatePath("/imports"); revalidatePath("/transactions"); revalidatePath("/dashboard");
+  revalidatePath("/imports"); revalidatePath("/transactions"); revalidatePath("/dashboard"); revalidatePath("/budgets"); revalidatePath("/income"); revalidatePath("/calendar"); revalidatePath("/analytics", "layout");
   redirect("/imports");
 }
 

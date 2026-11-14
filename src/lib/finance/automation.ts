@@ -43,6 +43,18 @@ export function isUnusual(amountMinor: number, history: number[]): { unusual: bo
   if (history.length < 3 || amountMinor < 50000) return { unusual: false, typicalMinor: 0 }; const m = median(history); return { unusual: amountMinor >= 3 * m, typicalMinor: Math.round(m) };
 }
 
+export interface ImportedTx { name?: string | null; categoryId: string | null; amountMinor: number; occurredAt: string; type: string }
+/**
+ * Expenses in a freshly confirmed import that are far above the user's usual for their category (same rule as `isUnusual`).
+ * Only the last `windowDays` count: an old statement isn't news. `historyByCat` must hold amounts from BEFORE the import. Biggest jump first.
+ */
+export function unusualInImport(rows: ImportedTx[], historyByCat: Record<string, number[]>, now = new Date(), windowDays = 30) {
+  const since = now.getTime() - windowDays * DAY;
+  return rows.filter((r) => r.type === "expense" && r.categoryId && new Date(r.occurredAt).getTime() >= since)
+    .map((r) => ({ ...r, ...isUnusual(r.amountMinor, historyByCat[r.categoryId as string] ?? []) }))
+    .filter((r) => r.unusual).sort((x, y) => y.amountMinor / y.typicalMinor - x.amountMinor / x.typicalMinor);
+}
+
 export interface QuickInsight { tone: "good" | "warn" | "info"; text: string; tag?: string }
 /** Instant, deterministic highlights for the dashboard (no AI needed). All numbers come straight from the summaries. */
 export function quickInsights(cur: { incomeMinor: number; netExpenseMinor: number; savingsRatePct: number | null; byCategory: Record<string, number> }, prev: { netExpenseMinor: number; byCategory: Record<string, number> }, catName: (id: string) => string, fmt: (m: number) => string): QuickInsight[] {

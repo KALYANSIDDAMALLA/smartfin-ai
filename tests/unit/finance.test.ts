@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { parseMoney, formatMoney, percent, allocate, sum } from "@/lib/finance/money";
 import { summarize, estimatedBalance } from "@/lib/finance/accounting";
 import { bucketLabel } from "@/lib/finance/trends";
+import { unusualInImport } from "@/lib/finance/automation";
 import { presetRange, customRange, previousRange, localDate, likeForLike, isoToLocalInput, localInputToIso } from "@/lib/finance/dates";
 import { evaluateBudget, newlyCrossedThresholds, type BudgetDef } from "@/lib/finance/budget";
 import { goalProgress, crossedMilestones, estimatedCompletion, monthsBetween } from "@/lib/finance/goals";
@@ -482,4 +483,18 @@ describe("datetime-local <-> instant in the user's timezone", () => {
     expect(isoToLocalInput("2026-11-01T14:30:00.000Z", "Asia/Kolkata")).toBe("2026-11-01T20:00");
   });
   it("rejects values that aren't a datetime-local string", () => { expect(localInputToIso("garbage")).toBeUndefined(); expect(localInputToIso("2026-11-01T20:00:00Z")).toBeUndefined(); });
+});
+
+describe("unusual payments in an import", () => {
+  const now = new Date("2026-11-15T12:00:00Z"); const hist = { food: [20000, 25000, 30000, 22000, 28000] }; // median 25,000 paise
+  const row = (o: Partial<{ name: string; categoryId: string | null; amountMinor: number; occurredAt: string; type: string }>) => ({ name: "X", categoryId: "food", amountMinor: 100000, occurredAt: "2026-11-10T10:00:00Z", type: "expense", ...o });
+  it("flags recent expenses 3x+ above the category median, biggest jump first", () => {
+    const r = unusualInImport([row({ name: "A", amountMinor: 90000 }), row({ name: "B", amountMinor: 200000 }), row({ name: "C", amountMinor: 30000 })], hist, now);
+    expect(r.map((x) => x.name)).toEqual(["B", "A"]); expect(r[0].typicalMinor).toBe(25000);
+  });
+  it("ignores old statements, income, uncategorised rows, small amounts and thin history", () => {
+    expect(unusualInImport([row({ occurredAt: "2026-08-01T10:00:00Z" })], hist, now)).toEqual([]);
+    expect(unusualInImport([row({ type: "income" }), row({ categoryId: null }), row({ amountMinor: 40000 })], hist, now)).toEqual([]);
+    expect(unusualInImport([row({})], { food: [20000, 25000] }, now)).toEqual([]);
+  });
 });
