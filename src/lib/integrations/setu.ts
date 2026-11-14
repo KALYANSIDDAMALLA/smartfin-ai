@@ -16,6 +16,8 @@ export const setuConfigured = () => { const c = cfg(); return !!(c.id && c.secre
 /** Real bank linking is offered only when Setu is configured AND BANK_LINKING_ENABLED=true. This lets a server hold the keys without showing a button that Setu would refuse. */
 /** True when the configured Setu address is its practice (sandbox) system, where the banks and phone numbers are pretend and no real SMS is sent. */
 export const setuSandbox = () => /sandbox/i.test(cfg().base);
+/** Extra detail for the practice (sandbox) system only: the provider's own status, code and message, so a setup problem can be diagnosed from the page. Real users never see it. */
+export const sandboxDetail = (e: SetuError, sandbox = setuSandbox()) => sandbox && e.status ? ` (Setu replied ${e.status} ${e.code}: ${e.message.slice(0, 160)})` : "";
 export const bankLinkingOn = () => setuConfigured() && (process.env.BANK_LINKING_ENABLED ?? "").trim().toLowerCase() === "true";
 
 async function call<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {

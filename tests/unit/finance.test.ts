@@ -498,3 +498,12 @@ describe("unusual payments in an import", () => {
     expect(unusualInImport([row({})], { food: [20000, 25000] }, now)).toEqual([]);
   });
 });
+
+describe("sandbox error detail", () => {
+  it("shows the provider's reply only in the practice system", async () => {
+    const { SetuError, sandboxDetail } = await import("@/lib/integrations/setu");
+    const e = new SetuError(400, "InvalidVua", "vua is not valid");
+    expect(sandboxDetail(e, true)).toBe(" (Setu replied 400 InvalidVua: vua is not valid)");
+    expect(sandboxDetail(e, false)).toBe(""); expect(sandboxDetail(new SetuError(0, "NotConfigured", "x"), true)).toBe("");
+  });
+});

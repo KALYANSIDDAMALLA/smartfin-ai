@@ -7,7 +7,7 @@ import { getUserOrNull } from "@/lib/server/auth";
 import { rateLimit } from "@/lib/server/ratelimit";
 import { notify } from "@/lib/server/notify";
 import { stage } from "@/lib/server/staging";
-import { createConsent, createSession, getConsent, getSession, revokeConsent, bankLinkingOn, SetuError } from "@/lib/integrations/setu";
+import { createConsent, createSession, getConsent, getSession, revokeConsent, bankLinkingOn, sandboxDetail, SetuError } from "@/lib/integrations/setu";
 import { AA_MAPPING, extractAATransactions } from "@/lib/integrations/aa-map";
 import { bankById } from "@/lib/banks";
 import { DEMO_BANK, sampleBankRows } from "@/lib/integrations/demo";
@@ -23,8 +23,8 @@ const providerErr = (e: unknown): FormState => {
     if (e.code === "NotConfigured") return { error: "Bank connections aren't configured on this server." };
     if (e.status === 404) return { error: "The provider couldn't find that consent." };
     // 4xx other than 404/429 means the request or the app's provider settings are wrong: retrying won't help, so don't say so.
-    if (e.status >= 400 && e.status < 500 && e.status !== 429) return { error: "Bank linking isn't fully set up yet, so this bank can't be linked right now. You can import a statement or try the demo bank instead." };
-    return { error: "The bank-data provider is busy or unavailable. Please try again in a few minutes." };
+    if (e.status >= 400 && e.status < 500 && e.status !== 429) return { error: "Bank linking isn't fully set up yet, so this bank can't be linked right now. You can import a statement or try the demo bank instead." + sandboxDetail(e) };
+    return { error: "The bank-data provider is busy or unavailable. Please try again in a few minutes." + sandboxDetail(e) };
   }
   console.error("integration error", (e as Error).message); return { error: "Something went wrong. Please try again." };
 };
